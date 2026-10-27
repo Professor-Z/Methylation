@@ -1,0 +1,8 @@
+{
+  // Must match your Worker's name in the Cloudflare dashboard
+  "name": "dnmt1-simulation",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public"
+  }
+}
