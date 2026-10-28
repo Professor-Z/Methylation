@@ -35,7 +35,7 @@
     .rxn-head { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.14em; color: #60a5fa; margin-bottom: 0.1rem; }
     #rxn-box svg { display: block; width: 100%; height: auto; }
     .rxn-note { font-size: 0.66rem; color: #94a3b8; margin-top: 0.1rem; }
-    #info { width: 23rem; padding: 1rem 1.1rem; max-height: calc(100vh - 150px); overflow: auto; }
+    #info { width: 30rem; padding: 1rem 1.1rem; max-height: calc(100vh - 128px); overflow: auto; }
     #info h1 { margin: 0 0 0.1rem; font-size: 1.125rem; line-height: 1.25; font-weight: 700; color: #60a5fa; }
     #info .sub { font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.6rem; }
     .row { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.8rem; padding: 0.22rem 0; border-bottom: 1px solid #374151; }
@@ -129,9 +129,11 @@
     #inh-modal { position: fixed; left: 62px; top: 16px; width: min(27rem, calc(100vw - 80px)); max-height: calc(100vh - 32px); overflow: auto; z-index: 30;
         font-size: var(--fs, 1rem);
         padding: 1.1rem 1.25rem 1rem; display: none; border: 2px solid #22e55e; box-shadow: 0 0 14px rgba(34,229,94,0.55), 0 0 30px rgba(34,229,94,0.25); }
-    #inh-pill { position: fixed; left: 16px; top: 220px; z-index: 30; display: none; cursor: pointer; font: inherit; font-size: 0.8rem; font-weight: 800;
-        letter-spacing: 0.08em; color: #bbf7d0; padding: 0.7rem 1rem; border-radius: 0.75rem; background: rgba(20,83,45,0.85); border: 2px solid #22e55e;
+    #inh-pill { position: fixed; left: 16px; bottom: 112px; z-index: 30; display: none; cursor: pointer; font: inherit; font-size: 0.8rem; font-weight: 700;
+        max-width: 19rem; text-align: left; line-height: 1.35; color: #dcfce7; padding: 0.65rem 0.95rem; border-radius: 0.75rem; background: rgba(20,83,45,0.88); border: 2px solid #22e55e;
         box-shadow: 0 0 14px rgba(34,229,94,0.75), 0 0 30px rgba(34,229,94,0.35); animation: pillGlow 1.6s ease-in-out infinite; }
+    #inh-pill b { display: block; margin-top: 0.2rem; font-weight: 800; letter-spacing: 0.08em; color: #4ade80; }
+    #inh-pill:hover b { color: #bbf7d0; }
     #inh-pill:hover { background: #166534; color: #fff; }
     @keyframes pillGlow { 0%,100% { box-shadow: 0 0 10px rgba(34,229,94,0.6), 0 0 22px rgba(34,229,94,0.25); } 50% { box-shadow: 0 0 18px rgba(34,229,94,0.95), 0 0 38px rgba(34,229,94,0.45); } }
     #inh-modal h2 { margin: 0 0 0.15rem; font-size: 1.12em; font-weight: 700; color: #60a5fa; }
@@ -139,6 +141,13 @@
     #inh-modal p { margin: 0 0 0.5em; font-size: 0.84em; line-height: 1.42; color: #e5e7eb; }
     #inh-modal .refs { margin-top: 0.4em; padding-top: 0.45em; border-top: 1px solid #374151; }
     #inh-modal .refs-h { font-size: 0.64em; font-weight: 800; letter-spacing: 0.14em; color: #94a3b8; margin-bottom: 0.25em; }
+    #inh-modal .fig { margin: 0.1em 0 0.7em; padding: 0.5em 0.4em 0.3em; border-radius: 0.5rem; background: rgba(15,23,42,0.7); }
+    #inh-modal .fig svg { display: block; width: 100%; height: auto; max-height: max(150px, 27vh); margin: 0 auto; }
+    details.refs > summary { cursor: pointer; list-style: none; user-select: none; }
+    details.refs > summary::-webkit-details-marker { display: none; }
+    details.refs > summary::before { content: '▸ '; }
+    details.refs[open] > summary::before { content: '▾ '; }
+    details.refs > summary:hover { color: #e5e7eb; }
     #inh-modal ol { margin: 0; padding-left: 1.3em; font-size: 0.66em; line-height: 1.35; color: #cbd5e1; }
     #inh-modal li { margin-bottom: 0.25em; }
     #inh-modal a { color: #60a5fa; text-decoration: none; }
@@ -153,12 +162,20 @@
     #res-wrap { position: fixed; left: 16px; bottom: 16px; z-index: 11; }
     #res-wrap .btn { padding: 0.62rem 1rem; font-size: 0.8rem; letter-spacing: 0.08em; }
     @media (max-width: 960px) { #res-wrap { bottom: 100px; } }
+    #desc-toggle { display: flex; align-items: center; gap: 0.4rem; width: 100%; margin: 0.55rem 0 0; padding: 0.35rem 0.1rem; background: none; border: none;
+        font: inherit; font-size: 0.78rem; font-weight: 700; color: #9ca3af; cursor: pointer; text-align: left; }
+    #desc-toggle:hover { color: #e5e7eb; }
+    #desc-toggle .chev { display: inline-block; transition: transform 0.2s; }
+    #desc-toggle.open .chev { transform: rotate(90deg); }
+    #desc-body { display: none; }
+    #desc-body.open { display: block; }
+    #desc-body #step-box { margin-top: 0.35rem; }
     #mech-sub { font-size: 0.8rem; font-weight: 700; color: #93c5fd; margin-bottom: 0.45rem; }
     #mech-box { margin: 0.1rem 0 0.2rem; padding: 0.35rem 0.2rem 0.15rem; border-radius: 0.5rem; background: rgba(15,23,42,0.7); border-left: 3px solid #2f80ff; }
-    #mech-box svg { display: block; width: 100%; height: auto; }
+    #mech-box svg { display: block; width: 100%; height: auto; max-height: min(480px, calc(100vh - 300px)); margin: 0 auto; }
     .mech-key { font-size: 0.68rem; line-height: 1.42; color: #94a3b8; margin-top: 0.6rem; }
     .mech-key b { color: #cbd5e1; }
-    #bg { width: 27rem; padding: 1rem 1.15rem; max-height: calc(100vh - 150px); overflow: auto; font-size: 0.82rem; line-height: 1.52; color: #e5e7eb; }
+    #bg { width: 31rem; padding: 1rem 1.15rem; max-height: calc(100vh - 150px); overflow: auto; font-size: 0.82rem; line-height: 1.52; color: #e5e7eb; }
     #bg h1 { margin: 0 0 0.1rem; font-size: 1.125rem; line-height: 1.25; font-weight: 700; color: #4ade80; }
     #bg .sub { font-size: 0.75rem; font-weight: 600; color: #9ca3af; margin-bottom: 0.4rem; }
     #bg h3 { margin: 1rem 0 0.3rem; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.14em; color: #4ade80; text-transform: uppercase; }
@@ -170,10 +187,13 @@
     #bg .note { font-size: 0.74rem; color: #94a3b8; }
     #bg .refs { margin-top: 0.8rem; padding-top: 0.5rem; border-top: 1px solid #374151; font-size: 0.68rem; line-height: 1.4; color: #94a3b8; }
     #bg a { color: #60a5fa; text-decoration: none; }
+    #bg .refs-h { font-size: 0.66rem; font-weight: 800; letter-spacing: 0.14em; color: #94a3b8; margin-bottom: 0.3rem; }
+    #bg .refs ol { margin: 0; padding-left: 1.2rem; }
+    #bg .refs li { margin-bottom: 0.3rem; }
 
     @media (max-width: 900px) {
-        #bg { width: min(27rem, calc(100vw - 70px)); max-height: 60vh; }
-        #info { width: min(23rem, calc(100vw - 70px)); max-height: 60vh; }
+        #bg { width: min(31rem, calc(100vw - 70px)); max-height: 60vh; }
+        #info { width: min(30rem, calc(100vw - 70px)); max-height: 60vh; }
         #controls { width: 15rem; max-height: 60vh; }
     }
 </style>
@@ -189,9 +209,12 @@
     <h1>Reaction mechanism</h1>
     <div id="mech-sub">Step 1 of 3</div>
     <div id="mech-box"><div id="mech-svg"></div></div>
+    <button id="desc-toggle" class="interactive"><span class="chev">▸</span><span id="desc-lbl">Click for description of reaction sequence</span></button>
+    <div id="desc-body">
     <div id="step-box"><div id="step-title">Step</div><div id="step-text"></div></div>
-    <div class="mech-key"><b>Key.</b> Red curved arrows show where electron pairs move: each tail starts on a lone pair or bond, and the head points to where the pair ends up. SAM = S-adenosyl-L-methionine (the methyl donor); SAH = S-adenosyl-L-homocysteine; R, R′ = the rest of SAM/SAH. Cys = cysteine, Glu = glutamate; the number is the residue's position in the protein chain. "DNA" = the sugar–phosphate backbone the base is attached to.</div>
+    <div class="mech-key">SAM = S-adenosyl-L-methionine (the methyl donor); SAH = S-adenosyl-L-homocysteine; R, R′ = the rest of SAM/SAH. Cys = cysteine, Glu = glutamate; the number is the residue's position in the protein chain. "DNA" = the sugar–phosphate backbone the base is attached to.</div>
     <div class="hint"><b>Drag</b> to rotate the view · <b>scroll</b> to zoom · <b>space</b> to play/pause</div>
+    </div>
 </div>
 <button class="drawer-tab" data-drawer="info-drawer">REACTION MECHANISM</button>
 </div>
@@ -200,71 +223,65 @@
 <div id="bg-drawer" class="drawer right collapsed">
 <button class="drawer-tab" data-drawer="bg-drawer">BACKGROUND INFO</button>
 <div id="bg" class="glass-panel interactive">
-    <h1>DNA methyltransferase 1 (DNMT1)</h1>
-    <div class="sub">Background for organic chemists meeting biochemistry for the first time</div>
+    <h1>DNA methylation: an S<sub>N</sub>2 reaction that controls your genes</h1>
+    <div class="sub">Background for the simulation</div>
 
-    <h3>1 · DNA in brief</h3>
-    <p><b>Deoxyribonucleic acid (DNA)</b> is a polymer of <b>nucleotides</b>. Each nucleotide is a 2-deoxyribose sugar carrying a phosphate group and a nitrogen heterocycle called a <b>base</b>. Phosphodiester links between the sugars form the backbone, and the bases point inward. There are four bases. The <b>purines</b> adenine (A) and guanine (G) have fused six- and five-membered rings. The <b>pyrimidines</b> cytosine (C) and thymine (T) have a single six-membered ring. Two strands wind into a double helix held together by hydrogen bonds between base pairs: A pairs with T (2 H-bonds) and G with C (3 H-bonds).</p>
+    <h3>1 · DNA in one paragraph</h3>
+    <p><b>Deoxyribonucleic acid (DNA)</b> is a long polymer. Its backbone is made of sugar and phosphate groups, and each sugar carries a nitrogen-containing ring called a <b>base</b>. There are four bases: adenine (A), guanine (G), cytosine (C) and thymine (T). Two strands wind into a double helix, held together by hydrogen bonds between base pairs: A pairs with T, and G pairs with C. The order of the bases spells out the cell's genes.</p>
     <div class="fig" id="bg-dna-key"></div>
-    <p class="note">In the simulation the outer DNA is schematic. Grey tubes are the sugar–phosphate backbones (orange beads = phosphates), and each base is a colored polygon with the shape of its ring system. The one base being methylated is drawn with all its atoms.</p>
+    <p class="note">In the simulation, the outer DNA is drawn schematically, with each base shown as a colored polygon. The one cytosine being methylated is drawn with all its atoms.</p>
 
-    <h3>2 · DNA methylation</h3>
-    <p>Cells can attach a methyl group to <b>C5 of cytosine</b>, making <b>5-methylcytosine (5mC)</b>. In mammals this happens almost only at <b>CpG sites</b>, where a C is followed by a G on the same strand (the "p" is the phosphate linking them). CpG reads the same 5′→3′ on both strands, so each CpG site has one C on each strand, and usually both are methylated.</p>
-    <p>5mC still pairs with G, so the genetic sequence doesn't change. But the methyl group sticks out into the major groove of the helix, where proteins can detect it. Clusters of 5mC near the start of a gene keep that gene switched off. Heritable information that isn't written in the base sequence like this is called <b>epigenetic</b>.</p>
-
-    <h3>3 · The copying problem</h3>
-    <p>Before a cell divides, it copies its DNA. Each new double helix keeps one old (parent) strand and gets one newly made strand, and the new strand contains plain, unmethylated C's. So every CpG site becomes <b>hemimethylated</b>: methylated on the parent strand only (pink knob in the simulation).</p>
-    <p><b>DNMT1</b> repairs this. It is an <b>enzyme</b> (a protein catalyst) about 1600 amino acids long that travels with the DNA-copying machinery. It recognizes hemimethylated CpG sites and methylates the C on the new strand. This <b>maintenance methylation</b> passes the methylation pattern to both daughter cells.</p>
-
-    <h3>4 · The methyl donor: SAM</h3>
-    <p>The methyl group comes from <b>S-adenosyl-L-methionine (SAM)</b>, a sulfonium salt with a CH₃ on a positively charged sulfur. You can think of it as nature's methyl iodide. A nucleophile attacks the methyl carbon by S<sub>N</sub>2, and the leaving group is a neutral thioether, <b>S-adenosyl-L-homocysteine (SAH)</b>.</p>
-    <div class="fig" id="bg-scheme"></div>
-
-    <h3>5 · The organic chemistry problem</h3>
-    <p>C5 of cytosine sits in an electron-poor aromatic heterocycle, so on its own it is far too weak a nucleophile to attack SAM. DNMT1 gets around this with <b>covalent catalysis</b>, temporarily turning C5 into an enamine carbon:</p>
-    <ol>
-        <li><b>Conjugate addition.</b> A cysteine thiolate (RS⁻) adds to C6. At the same time, a glutamic acid protonates N3, which makes the C6=C5–C4=N3 unit behave like an α,β-unsaturated iminium ion with C6 as the β-carbon. The ring loses its aromaticity, and C5 becomes the nucleophilic carbon of an <b>enamine</b>.</li>
-        <li><b>Enamine alkylation.</b> C5 attacks the CH₃ of SAM by S<sub>N</sub>2, much like a Stork enamine alkylation. This is the slowest chemical step.</li>
-        <li><b>β-Elimination.</b> A base removes the H on C5, and the C6–S bond breaks to expel the cysteine (E1cB-like). Aromaticity is restored and the enzyme is released unchanged.</li>
-    </ol>
-    <p>If you know the <b>Morita–Baylis–Hillman reaction</b>, the pattern is the same. A nucleophilic catalyst adds in conjugate fashion, making the α-carbon nucleophilic. That carbon attacks an electrophile, and then the catalyst is eliminated.</p>
-
-    <h3>6 · The active-site cast</h3>
-    <p>A protein is a chain of amino acids. Each <b>residue</b> is named by its amino acid and its position in the chain, so <b>Cys1226</b> is the cysteine at position 1226.</p>
+    <h3>2 · Methylation is an S<sub>N</sub>2 reaction</h3>
+    <p>Cells can attach a methyl group (CH₃) to carbon 5 of cytosine, making <b>5-methylcytosine (5mC)</b>. The methyl group comes from <b>S-adenosylmethionine (SAM)</b>, which has a CH₃ bonded to a positively charged sulfur. SAM is essentially nature's version of methyl iodide (CH₃I):</p>
     <ul>
-        <li><b>Cys1226</b> (cysteine, side chain –CH₂–SH, here as the thiolate –CH₂–S⁻): the nucleophile that adds to C6.</li>
-        <li><b>Glu1266</b> (glutamate, –CH₂CH₂–CO₂H): a general acid that protonates N3, and later a general base that takes the proton back.</li>
-        <li><b>Arg1310</b> and <b>Arg1312</b> (arginine, –(CH₂)₃–NH–C(=NH₂⁺)NH₂, a guanidinium cation): H-bond donors to the C2=O oxygen that hold the base in place and make the ring more electrophilic.</li>
-        <li><b>SAM</b>: bound in its own pocket with its CH₃ pointing at C5.</li>
-        <li><b>The base for step 3</b> has not been identified. The simulation draws it as a water molecule.</li>
+        <li><b>Substrate:</b> the methyl carbon, which is unhindered and so ideal for S<sub>N</sub>2.</li>
+        <li><b>Leaving group:</b> a neutral sulfide, <b>S-adenosylhomocysteine (SAH)</b>. It is a good leaving group because the sulfur gets rid of its positive charge when it leaves.</li>
+        <li><b>Nucleophile:</b> C5 of cytosine. This is the hard part, because C5 sits in an electron-poor aromatic ring and is a very weak nucleophile on its own.</li>
     </ul>
+    <div class="fig" id="bg-scheme"></div>
+    <p><b>DNA methyltransferase 1 (DNMT1)</b> is the <b>enzyme</b> (a protein catalyst) that performs this reaction. To make C5 a better nucleophile, it first bonds a sulfur atom from its own amino acid side chain (cysteine 1226, or Cys1226) to the neighboring carbon, C6. That pushes electron density onto C5. C5 then attacks the CH₃ of SAM by backside attack: the C–S bond breaks as the new C–C bond forms, and the methyl's three H's flip like an umbrella (inversion). Finally, a base in the active site removes the extra H from C5, the enzyme lets go, and the aromatic ring is restored. The <b>REACTION MECHANISM</b> tab shows each step with curved arrows.</p>
 
-    <h3>7 · Where is the cytosine?</h3>
-    <p>The target C is part of the new DNA strand and stays covalently attached to its backbone throughout. In free DNA it is stacked inside the helix, paired with a G. To reach C5 and C6, DNMT1 rotates that one nucleotide about its backbone bonds, swinging the base out of the helix and into the catalytic pocket. This is called <b>base flipping</b>. Crystal structures show this flipped state, and the simulation starts from it: the target C (glowing) is already in the pocket, and its partner G is left behind in the helix.</p>
+    <h3>3 · Epigenetics: switching genes off</h3>
+    <p>A methyl group doesn't change the base sequence; 5mC still pairs with G. But methylation acts like a chemical "off switch." It happens mainly at <b>CpG sites</b>, where a C is followed by a G on the same strand. When many CpG sites near the start of a gene are methylated, the cell can no longer read (express) that gene. Information stored on top of the DNA sequence like this is referred to as <b>epigenetic</b> ("above the genes"). This is how a skin cell and a nerve cell can share identical DNA yet use different genes.</p>
+    <p>When a cell copies its DNA before dividing, the new strand starts out unmethylated. DNMT1 travels along behind the copying machinery and methylates the new strand to match the old one, so both daughter cells inherit the same pattern of switched-off genes.</p>
 
-    <h3>8 · Using the simulation</h3>
-    <p>Press <b>▶</b> to zoom in and run the reaction. It pauses at each intermediate. Open <b>REACTION MECHANISM</b> to see the curved-arrow mechanism for the current step, and use <b>RESIDUES</b> (bottom left) to label the atoms and amino acids. After methylation finishes, a module shows how the cancer drug <b>azacitidine</b> hijacks this mechanism to trap DNMT1 permanently.</p>
+    <h3>4 · When methylation goes wrong: cancer</h3>
+    <p>Cancer cells often have scrambled methylation patterns:</p>
+    <ul>
+        <li><b>Too much methylation in the wrong places.</b> <b>Tumor-suppressor genes</b> are genes that normally put the brakes on cell division or repair damaged DNA. When the CpG sites at the start of these genes become heavily methylated, the genes are switched off. Without their brakes, cells can divide uncontrollably. Examples include DNA-repair genes such as <i>MLH1</i> in some colon cancers and <i>BRCA1</i> in some breast cancers.</li>
+        <li><b>Too little methylation elsewhere.</b> Losing methylation across large regions of the genome makes DNA less stable and can switch on genes that should stay silent.</li>
+    </ul>
+    <p>Unlike a mutation, methylation can be reversed. That makes DNMT1 a drug target, and the module at the end of the simulation shows how the cancer drug <b>azacitidine</b> traps DNMT1 to undo this silencing.</p>
 
-    <div class="refs">
-        Du Q, Wang Z, Schramm VL. Human DNMT1 transition state structure. <i>Proc Natl Acad Sci USA</i> 2016;113:2916–2921. <a href="https://doi.org/10.1073/pnas.1522491113" target="_blank" rel="noopener">doi:10.1073/pnas.1522491113</a><br>
-        Song J, Teplova M, Ishibe-Murakami S, Patel DJ. Structure-based mechanistic insights into DNMT1-mediated maintenance DNA methylation. <i>Science</i> 2012;335:709–712. <a href="https://doi.org/10.1126/science.1214453" target="_blank" rel="noopener">doi:10.1126/science.1214453</a>
-    </div>
+    <h3>5 · Using the simulation</h3>
+    <p>Press <b>▶</b> to zoom in and run the reaction; it pauses after each step. Open <b>REACTION MECHANISM</b> for the curved-arrow mechanism of the current step, and use <b>RESIDUES</b> (bottom left) to label the atoms and amino acids.</p>
+
+    <details class="refs">
+        <summary class="refs-h">REFERENCES (click to show)</summary>
+        <ol>
+            <li>Du Q, Wang Z, Schramm VL. Human DNMT1 transition state structure. <i>Proc Natl Acad Sci USA</i> 2016;113:2916–2921. <a href="https://doi.org/10.1073/pnas.1522491113" target="_blank" rel="noopener">doi:10.1073/pnas.1522491113</a></li>
+            <li>Song J, Teplova M, Ishibe-Murakami S, Patel DJ. Structure-based mechanistic insights into DNMT1-mediated maintenance DNA methylation. <i>Science</i> 2012;335:709–712. <a href="https://doi.org/10.1126/science.1214453" target="_blank" rel="noopener">doi:10.1126/science.1214453</a></li>
+            <li>Baylin SB, Jones PA. Epigenetic determinants of cancer. <i>Cold Spring Harb Perspect Biol</i> 2016;8:a019505. <a href="https://doi.org/10.1101/cshperspect.a019505" target="_blank" rel="noopener">doi:10.1101/cshperspect.a019505</a></li>
+        </ol>
+    </details>
 </div>
 </div>
 <div id="res-wrap"><button class="btn tg interactive" id="tg-labels" title="Label the atoms, amino acids and SAM">RESIDUES</button></div>
 
 <!-- ======================= INHIBITION ======================= -->
-<button id="inh-pill" class="interactive">LEARN ABOUT IRREVERSIBLE INHIBITION</button>
+<button id="inh-pill" class="interactive">How can this reactivity be leveraged to treat cancer?<b>THE CASE OF AZACITIDINE</b></button>
 <div id="inh-modal" class="glass-panel interactive">
-    <h2>Irreversible inhibition: azacitidine</h2>
-    <div class="sub">A nucleoside drug that turns DNMT1's own mechanism into a trap</div>
-    <p><b>DNA methyltransferase 1 (DNMT1)</b> copies DNA methylation onto the new strand after every round of DNA replication. Methylated CpG sites (a C followed by a G) near a gene's start keep that gene switched off, and many cancers silence tumor-suppressor genes this way.</p>
-    <p>A <b>competitive inhibitor</b> would only occupy the active site, and could be outcompeted or washed out. <b>Azacitidine</b> (5-azacytidine) works differently. It is cytidine with a nitrogen in place of carbon at position 5 of the ring. Cells phosphorylate it; most ends up in RNA, but roughly 10–20% is converted to the deoxy form and built into DNA in place of cytosine. Its close relative <b>decitabine</b> (5-aza-2′-deoxycytidine) goes straight into DNA.</p>
+    <h2>Azacitidine: an irreversible inhibitor of DNMT1</h2>
+    <div class="sub">Understanding the mechanism of action of an anticancer drug</div>
+    <p><b>DNA methyltransferase 1 (DNMT1)</b> keeps the cell's methylation pattern intact. Each time a cell copies its DNA, DNMT1 adds CH₃ groups to the new strand so it matches the old one. Cells use this methylation to control which genes are expressed: when the CpG sites (a C followed by a G) near the start of a gene are methylated, that gene is switched off.</p>
+    <p>In many cancers this system goes wrong. The CpG sites at the start of <b>tumor-suppressor genes</b>, which normally slow cell division or repair damaged DNA, become <b>overmethylated</b>, switching off the cell's brakes. DNMT1 then faithfully copies this abnormal pattern into every daughter cell. Blocking DNMT1 can allow the silenced genes to switch back on.</p>
+    <p><b>Azacitidine</b> (5-azacytidine) is the nucleoside cytidine with a nitrogen in place of carbon at position 5 of the ring. Cells phosphorylate it; most ends up in RNA, but roughly 10–20% is converted to the deoxy form and built into DNA in place of cytosine. Its close relative <b>decitabine</b> (5-aza-2′-deoxycytidine) goes straight into DNA.</p>
     <p>When DNMT1 meets a 5-azacytosine at a hemimethylated CpG, it runs its normal chemistry: Cys1226 bonds to C6 and the methyl group goes to N5. But the step that releases the enzyme removes the H from position 5, and <b>N5 has no H</b>. The Cys–C6 bond cannot break, so DNMT1 stays <b>covalently trapped on the DNA</b>. This is <b>irreversible, mechanism-based ("suicide") inhibition</b>.</p>
-    <p><b>Consequences.</b> Trapped DNMT1 is tagged and destroyed by the proteasome. As cells keep dividing without enough DNMT1, new strands stay unmethylated (<b>passive demethylation</b>), and silenced genes can switch back on. At high doses the bulky protein–DNA crosslinks also damage DNA and kill cells.</p>
-    <p><b>Where it comes from.</b> Azacitidine was first synthesized in 1964 by Pískala and Šorm in Czechoslovakia, and was soon also found as a natural antibiotic made by the soil bacterium <i>Streptoverticillium ladakanus</i>. The U.S. Food and Drug Administration (FDA) approved it (Vidaza) in 2004 as the first drug for <b>myelodysplastic syndromes</b>; it is also used for acute myeloid leukemia, including an oral form (Onureg, 2020).</p>
-    <div class="refs">
-        <div class="refs-h">REFERENCES</div>
+    <div class="fig" id="aza-fig"></div>
+    <p><b>Consequences.</b> Trapped DNMT1 is tagged and destroyed by the <b>proteasome</b> (a large protein complex that acts as the cell's "shredder," breaking down proteins marked for disposal). As cells keep dividing without enough DNMT1, new strands stay unmethylated (<b>passive demethylation</b>), and silenced genes can switch back on. At high doses the bulky protein–DNA crosslinks also damage DNA and kill cells.</p>
+    <p><b>Where it comes from.</b> Azacitidine was first synthesized in 1964 by Pískala and Šorm in Czechoslovakia, and was soon also found as a natural antibiotic made by the soil bacterium <i>Streptoverticillium ladakanus</i>. The U.S. Food and Drug Administration (FDA) approved it (Vidaza) in 2004 as the first drug for <b>myelodysplastic syndromes (MDS)</b>, a group of bone-marrow cancers in which blood-forming stem cells develop abnormally and fail to make enough healthy blood cells. MDS can progress to <b>acute myeloid leukemia (AML)</b>, which azacitidine is also used to treat, including as an oral tablet (Onureg, 2020).</p>
+    <details class="refs">
+        <summary class="refs-h">REFERENCES (click to show)</summary>
         <ol>
             <li>Santi DV, Norment A, Garrett CE. Covalent bond formation between a DNA-cytosine methyltransferase and DNA containing 5-azacytosine. <i>Proc Natl Acad Sci USA</i> 1984;81:6993–6997. <a href="https://doi.org/10.1073/pnas.81.22.6993" target="_blank" rel="noopener">doi:10.1073/pnas.81.22.6993</a></li>
             <li>Du Q, Wang Z, Schramm VL. Human DNMT1 transition state structure. <i>Proc Natl Acad Sci USA</i> 2016;113:2916–2921. <a href="https://doi.org/10.1073/pnas.1522491113" target="_blank" rel="noopener">doi:10.1073/pnas.1522491113</a></li>
@@ -274,7 +291,7 @@
             <li>Fenaux P, Mufti GJ, Hellstrom-Lindberg E, et al. Efficacy of azacitidine compared with that of conventional care regimens in the treatment of higher-risk myelodysplastic syndromes: a randomised, open-label, phase III study. <i>Lancet Oncol</i> 2009;10:223–232. <a href="https://doi.org/10.1016/S1470-2045(09)70003-8" target="_blank" rel="noopener">doi:10.1016/S1470-2045(09)70003-8</a></li>
             <li>Hanka LJ, Evans JS, Mason DJ, Dietz A. Microbiological production of 5-azacytidine. I. Production and biological activity. <i>Antimicrob Agents Chemother</i> 1966;6:619–624. <a href="https://pubmed.ncbi.nlm.nih.gov/?term=Microbiological+production+of+5-azacytidine" target="_blank" rel="noopener">PubMed</a></li>
         </ol>
-    </div>
+    </details>
     <div class="row2">
         <button class="btn" id="inh-no">NOT NOW</button>
         <button class="btn active" id="inh-yes">WATCH AZACITIDINE TRAP DNMT1</button>
@@ -618,8 +635,11 @@
         const Op = RING0.C5.clone().addScaledVector(h5Sp3, 3.0);
         const O = eAtom('O', Op, res);
         const n = new THREE.Vector3().crossVectors(h5Sp3, rad(ANG.C5)).normalize();
-        [1, -1].forEach(sg => eBond(O, eAtom('H', Op.clone().addScaledVector(h5Sp3.clone().multiplyScalar(0.6).addScaledVector(n, 0.8 * sg).normalize(), 0.97), res)));
-        return { O, Op };
+        const H = [1, -1].map(sg => { const h = eAtom('H', Op.clone().addScaledVector(h5Sp3.clone().multiplyScalar(0.6).addScaledVector(n, 0.8 * sg).normalize(), 0.97), res); eBond(O, h); return h; });
+        // H₃O⁺: three O–H bonds ~19° below the plane (lone pair along +L), 120° apart around it; pyr[0] = the H arriving from C5
+        const e1 = h5Sp3.clone().negate(), L = new THREE.Vector3().crossVectors(e1, n).normalize();
+        const pyr = [0, 120, -120].map(ph => L.clone().multiplyScalar(-0.33).addScaledVector(e1, 0.943 * Math.cos(ph * deg)).addScaledVector(n, 0.943 * Math.sin(ph * deg)).normalize());
+        return { O, Op, H, pyr };
     })();
 
     // ---- bonds that form and break
@@ -1055,14 +1075,14 @@
         // B) C4=C5 π → CH₃ of SAM;  CH₃–S⁺ σ → S;  N3 lone pair → C4=N3
         makeArrow(1, g.N3.clone().addScaledVector(UP, 0.42).addScaledVector(SR, -0.3), mid(g.N3, g.C4).addScaledVector(UP, 0.2).addScaledVector(SR, 0.15), 0, 0, { side: UP, h: 1.25 });
         makeArrow(1, inn(g.C4, g.C5), CM0.clone().addScaledVector(mSp3, -0.42), 1, 0.7);
-        makeArrow(1, mid(CM0, SD), SD.clone().addScaledVector(rad(ANG.C5), 0.45), -1, 0.45);
+        makeArrow(1, mid(CM0, SD), SD.clone().addScaledVector(SR, 0.5).addScaledVector(mSp3, -0.1), 0, 0, { side: SR, h: 1.0 });
         // C) H₂O → H on C5;  C5–H σ → C5=C6 π;  C6–S σ → S;  Glu1266 O⁻ → H on N3
         const H5i = g.C5.clone().addScaledVector(h5Sp3, 1.09), Sb = g.C6.clone().addScaledVector(sDir, 1.82), HN = g.N3.clone().addScaledVector(rad30, 1.01);
         makeArrow(2, WO.clone().addScaledVector(h5Sp3, -0.4), H5i.clone().addScaledVector(h5Sp3, 0.35), 1, 0.6);
         makeArrow(2, mid(g.C5, H5i), mid(g.C5, g.C6).addScaledVector(rad(90), 0.12), 0, 0, { side: SR.clone().negate(), h: 1.1 });
         makeArrow(2, mid(g.C6, Sb), Sb.clone().addScaledVector(sDir, -0.25).addScaledVector(SR, -0.38), 0, 0, { side: SR.clone().negate().addScaledVector(UP, -0.4), h: 1.1 });
         makeArrow(2, OE1.clone().addScaledVector(UP, -0.45).addScaledVector(SR, 0.25), HN.clone().addScaledVector(UP, -0.3).addScaledVector(SR, -0.25), 0, 0, { side: UP.clone().negate().addScaledVector(SR, 0.4), h: 0.95 });
-        makeArrow(2, mid(g.N3, HN).addScaledVector(SR, 0.3).addScaledVector(UP, 0.2), g.N3.clone().addScaledVector(SR, -0.5).addScaledVector(UP, 0.25), 0, 0, { side: UP, h: 1.2 });   // N3–H σ → N3
+        makeArrow(2, mid(g.N3, HN).addScaledVector(SR, 0.3).addScaledVector(UP, 0.2), g.N3.clone().addScaledVector(SR, -0.05).addScaledVector(UP, 0.4), 0, 0, { side: UP.clone().addScaledVector(SR, -0.5), h: 1.15 });   // N3–H σ → N3
     })();
 
     // =====================================================================
@@ -1235,6 +1255,7 @@
         resOffset.wat.copy(h5Sp3).multiplyScalar(3 * (1 - fit));
         if (A > 0) resOffset.wat.addScaledVector(h5Sp3, -1.0 * smooth(0.05, 0.3, A) * (1 - smooth(0.5, 0.8, A)));   // the base looks for an H on N5 — there is none
         for (const a of enzAtoms) { a.mesh.position.copy(a.base).add(resOffset[a.res]); setAtomAlpha(a, st.resEff); }
+        if (eE > 0) wat.H.forEach((h, k) => h.mesh.position.lerp(wat.O.mesh.position.clone().addScaledVector(wat.pyr[k + 1], 0.97), eE));   // water → pyramidal H₃O⁺
 
         // ---- Glu1266's proton: Glu → N3 (attack) → Glu (elimination)
         const gluH = glu.Hbase.clone().add(resOffset.glu);
@@ -1242,7 +1263,7 @@
         setAtomAlpha(HN3, st.resEff);
         // ---- C5 proton: tilts up as the methyl adds below, then leaves to the water
         const h5s = S.C5.mesh.position.clone().addScaledVector(rot(tilt(ANG.C5, T54 * eM)), 1.09);
-        H5.mesh.position.copy(h5s).lerp(wat.O.mesh.position.clone().addScaledVector(h5Sp3, -0.98), eE);
+        H5.mesh.position.copy(h5s).lerp(wat.O.mesh.position.clone().addScaledVector(wat.pyr[0], 0.97), eE);
         setAtomAlpha(H5, st.inhib ? 0 : eE > 0.5 ? st.resEff * (1 - smooth(0.4, 0.8, u)) : subAlpha);
         // ---- methyl group: SAM S⁺ → C5 (S_N2: the three H's invert like an umbrella)
         const mdC5 = rot(st.inhib ? mSp3 : tilt(ANG.C5, -T54 * (1 - eE)));
@@ -1485,17 +1506,26 @@ ${ringSVG(228, 46, right)}
             [['N1', 'C2'], ['C2', 'N3'], ['N3', 'C4'], ['C4', 'C5'], ['C5', 'C6'], ['C6', 'N1']].forEach(([a, b]) => B(a, b, { dbl: dbl.includes(a + b) ? 'in' : null }));
             P.N4 = add(P.C4, 90, 24); L('N4', 'NH₂', NC, { anchor: 'start', dx: -4.3 }); B('C4', 'N4');
             P.O2 = add(P.C2, -150, 22); L('O2', 'O', OC); B('C2', 'O2', { dbl: 1 });
-            P.R1 = add(P.N1, -90, 14); B('N1', 'R1', { col: GR }); back.push(T(add(P.N1, -90, 23), 'DNA', GR, 9));
+            if (s.ribose) {                                    // β-D-ribofuranose on N1, bonds the same length as the ring (24)
+                const r = 24 / (2 * Math.sin(36 * d2r)), sc = (a) => [Math.cos(a * d2r), Math.sin(a * d2r)];   // screen angles (y down)
+                const C1 = add(P.N1, -90, 22), cen = [C1[0] - r * sc(-126)[0], C1[1] - r * sc(-126)[1]];
+                const v = (a) => [cen[0] + r * sc(a)[0], cen[1] + r * sc(a)[1]], out = (p, a, l) => [p[0] + l * sc(a)[0], p[1] + l * sc(a)[1]];
+                P.Cr1 = v(-126); P.Or4 = v(-54); P.Cr4 = v(18); P.Cr3 = v(90); P.Cr2 = v(162);
+                P.O2r = out(P.Cr2, 150, 22); P.O3r = out(P.Cr3, 90, 22); P.Cr5 = out(P.Cr4, -30, 24); P.O5r = out(P.Cr5, 30, 22);
+                L('Or4', 'O', OC); L('O2r', 'HO', OC, { anchor: 'end', dx: 4.3 }); L('O3r', 'OH', OC); L('O5r', 'OH', OC, { anchor: 'start', dx: -4.3 });
+                [['N1', 'Cr1'], ['Cr1', 'Or4'], ['Or4', 'Cr4'], ['Cr4', 'Cr3'], ['Cr3', 'Cr2'], ['Cr2', 'Cr1'], ['Cr2', 'O2r'], ['Cr3', 'O3r'], ['Cr4', 'Cr5'], ['Cr5', 'O5r']].forEach(([a, b]) => B(a, b));
+            } else { P.R1 = add(P.N1, -90, 14); B('N1', 'R1', { col: GR }); back.push(T(add(P.N1, -90, 23), 'DNA', GR, 9)); }
             if (s.n3H) { P.H3 = add(P.N3, 150, 20); L('H3', 'H', FG, { trim: 5 }); B('N3', 'H3'); }
             if (s.n3plus) chg('N3', 90, 1, 12);
             if (s.lpN3) lp('N3', 90);
             // position 5
             if (s.p5 === 'H') { P.H5 = add(P.C5, 30, 20); L('H5', 'H', HC, { trim: 5 }); B('C5', 'H5'); }
-            if (s.p5 === 'HMe') { P.H5 = add(P.C5, 5, 20); L('H5', 'H', HC, { trim: 5 }); B('C5', 'H5'); }
-            if (s.p5 === 'HMe' || s.p5 === 'Melp') { P.Me = add(P.C5, 65, 24); L('Me', 'CH₃', MC, { anchor: 'start', dx: -4.3 }); B('C5', 'Me', { col: MC }); }
+            if (s.p5 === 'HMe') { P.H5 = add(P.C5, -5, 20); L('H5', 'H', HC, { trim: 5 }); B('C5', 'H5'); }
+            if (s.p5 === 'HMe') { P.Me = add(P.C5, 65, 24); L('Me', 'CH₃', MC, { anchor: 'start', dx: -4.3 }); B('C5', 'Me', { col: MC }); }
+            if (s.p5 === 'Melp') { P.Me = add(P.C5, 30, 24); L('Me', 'CH₃', MC, { anchor: 'start', dx: -4.3 }); B('C5', 'Me', { col: MC }); }
             if (s.p5 === 'Me') { P.Me = add(P.C5, 30, 24); L('Me', 'CH₃', MC, { anchor: 'start', dx: -4.3 }); B('C5', 'Me', { col: MC }); }
             if (s.p5 === 'lp') lp('C5', 30);
-            if (s.p5 === 'Melp') lp('C5', 2);
+            if (s.p5 === 'Melp') lp('C5', -35);
             // C6 and Cys1226
             if (s.c6 === 'S') { P.H6 = add(P.C6, -95, 19); P.S = add(P.C6, -25, 24); B('C6', 'S', s.trap ? { col: '#ff2b2b', w: 3 } : {}); }
             else P.H6 = add(P.C6, -30, 20);
@@ -1547,39 +1577,40 @@ ${ringSVG(228, 46, right)}
         }
 
         // arrows for each step, positioned from the reactant drawing
-        const A1 = (P) => curve(add(P.S, 185, 12), add(P.C6, 5, 8), 7)                                   // RS⁻ lone pair → C6
-            + curve(add(mid(P.C5, P.C6), 180, 3), add(mid(P.C4, P.C5), 240, 3), [5, -4])                 // C5=C6 π → C4–C5
-            + curve(add(mid(P.N3, P.C4), 120, 1.5), add(P.Hg, -30, 7), 12)                               // N3=C4 π → H of Glu
-            + curve(mid(P.Og, P.Hg), add(P.Og, -115, 9), [P.Og[0] + 7, P.Og[1] + 30]);                                          // O–H σ → O
-        const A2 = (P) => curve(add(P.N3, 90, 12.5), add(mid(P.N3, P.C4), 120, 2.5), [[P.N3[0] - 8, P.N3[1] - 27], [P.N3[0] + 9, P.N3[1] - 27]])                 // N3 lone pair → N3=C4
-            + curve(add(mid(P.C4, P.C5), 60, 1.8), add(P.Mx, 235, 8.5), -8)                               // C4=C5 π → CH₃
-            + curve(mid(P.Mx, P.Ss), add(P.Ss, -60, 8.5), add(P.Ss, -95, 27));                                             // CH₃–S⁺ σ → S
-        const GLU_BACK = (P) => curve(add(P.Og, -30, 12), add(P.H3, 150, 7.5), -7)                        // Glu O⁻ → H on N3
-            + curve(add(mid(P.N3, P.H3), 240, 1.5), add(P.N3, 235, 9.5), [P.N3[0] - 36, P.N3[1] + 16]);                                             // N3–H σ → N3
-        const A3 = (P) => curve(add(P.Ow, 185, 12), add(P.H5, 5, 7.5), 7)                                // H₂O → H on C5
-            + curve(mid(P.C5, P.H5), add(mid(P.C5, P.C6), 0, 2.5), -7)                                    // C5–H σ → C5=C6 π
-            + curve(mid(P.C6, P.S), add(P.S, -80, 8), add(P.S, -125, 24))                                               // C6–S σ → S (Cys leaves)
+        const A1 = (P) => curve(add(P.S, 185, 9.5), add(P.C6, 5, 4.5), 7)                                   // RS⁻ lone pair → C6
+            + curve(add(mid(P.C5, P.C6), 180, 1.85), add(mid(P.C4, P.C5), 240, 1.85), [5, -4])                 // C5=C6 π → C4–C5
+            + curve(add(mid(P.N3, P.C4), 300, 1.85), add(P.Hg, -30, 5.5), 12)                               // N3=C4 π → H of Glu
+            + curve(mid(P.Og, P.Hg), add(P.Og, -115, 7), [P.Og[0] + 7, P.Og[1] + 30]);                                          // O–H σ → O
+        const A2 = (P) => curve(add(P.N3, 90, 9.5), add(mid(P.N3, P.C4), 300, 1.85), [[P.N3[0] - 8, P.N3[1] - 27], [P.N3[0] + 9, P.N3[1] - 27]])                 // N3 lone pair → N3=C4
+            + curve(add(mid(P.C4, P.C5), 240, 1.85), add(P.Mx, 235, 7), -8)                               // C4=C5 π → CH₃
+            + curve(mid(P.Mx, P.Ss), add(P.Ss, -60, 7), add(P.Ss, -95, 27));                                             // CH₃–S⁺ σ → S
+        const GLU_BACK = (P) => curve(add(P.Og, -30, 9.5), add(P.H3, 150, 5.5), -7)                        // Glu O⁻ → H on N3
+            + curve(mid(P.N3, P.H3), add(P.N3, 185, 7), [[P.N3[0] - 26, P.N3[1] - 6], [P.N3[0] - 24, P.N3[1] + 12]]);                                             // N3–H σ → N3
+        const A3 = (P) => curve(add(P.Ow, 185, 9.5), add(P.H5, 5, 5.5), 7)                                // H₂O → H on C5
+            + curve(mid(P.C5, P.H5), add(mid(P.C5, P.C6), 180, 1.85), -7)                                    // C5–H σ → C5=C6 π
+            + curve(mid(P.C6, P.S), add(P.S, -80, 7), add(P.S, -125, 24))                                               // C6–S σ → S (Cys leaves)
             + GLU_BACK(P);
-        const AX = (P) => curve(add(P.Ow, 185, 12), add(P.C5, 2, 13), 7, { col: GR, dash: true, cross: true })
-            + T([58, 3], 'no H!', '#ff4d4d', 10)
+        const AX = (P) => curve(add(P.Ow, 185, 9.5), add(P.C5, -20, 12), [P.C5[0] + 34, P.C5[1] + 16], { col: GR, dash: true, cross: true })
+            + T([P.C5[0] + 52, P.C5[1] + 17], 'no H!', '#ff4d4d', 10)
             + GLU_BACK(P);
 
         const S0 = { aza: false, dbl: ['N3C4', 'C5C6'], p5: 'H', c6: 'H' };
         const mk = (o) => Object.assign({}, S0, o);
         const I1 = { dbl: ['C4C5'], n3H: true, c6: 'S', cys: 'bonded', glu: 'base' };
         const I2 = { dbl: ['N3C4'], n3H: true, n3plus: true, p5: 'HMe', c6: 'S', cys: 'bonded', glu: 'base' };
-        const SVG0 = '<svg viewBox="16 10 290 348" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">';
-        const down = (label, col) => seg([165, 166], [165, 191], FG, 1.6) + `<polygon points="165,198 160.5,190 169.5,190" fill="${FG}"/>` + T([176, 182], label, col || GR, 10, 'start');
-        const panel = (R, P, arrows, label, col) => SVG0 + draw(R, 165, 106, arrows) + down(label, col) + draw(P, 165, 300, null) + '</svg>';
+        const SVG0 = '<svg viewBox="16 10 290 362" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">';
+        const down = seg([165, 166], [165, 191], FG, 1.6) + `<polygon points="165,198 160.5,190 169.5,190" fill="${FG}"/>`;
+        // product drawn just below the arrow (oyP depends on how far the product reaches upward), its name centred underneath
+        const panel = (R, P, arrows, label, col, oyP) => SVG0 + draw(R, 165, 106, arrows) + down + draw(P, 165, oyP, null) + T([165, oyP + 70], label, col || GR, 10.5) + '</svg>';
         const panels = {
-            n1: { sub: 'Step 1 of 3 · Thiolate conjugate addition to C6', svg: panel(mk({ cys: 'free', glu: 'acid', lpS: true }), mk(I1), A1, 'enamine intermediate') },
-            n2: { sub: 'Step 2 of 3 · S<sub>N</sub>2 methyl transfer from SAM', svg: panel(mk({ ...I1, sam: 'sam', lpN3: true }), mk({ ...I2, sam: 'sah' }), A2, 'methylated intermediate') },
-            n3: { sub: 'Step 3 of 3 · <span>β</span>-Elimination (E1cB-like)', svg: panel(mk({ ...I2, lpGlu: true, water: 'h2o', lpW: true }), mk({ p5: 'Me', cys: 'free', glu: 'acid', water: 'h3o' }), A3, '5-methylcytosine (5mC)', MC) },
+            n1: { sub: 'Step 1 of 3 · Thiolate conjugate addition to C6', svg: panel(mk({ cys: 'free', glu: 'acid', lpS: true }), mk(I1), A1, 'enamine intermediate', null, 270) },
+            n2: { sub: 'Step 2 of 3 · S<sub>N</sub>2 methyl transfer from SAM', svg: panel(mk({ ...I1, sam: 'sam', lpN3: true }), mk({ ...I2, sam: 'sah' }), A2, 'methylated intermediate', null, 292) },
+            n3: { sub: 'Step 3 of 3 · <span>β</span>-Elimination (E1cB-like)', svg: panel(mk({ ...I2, lpGlu: true, water: 'h2o', lpW: true }), mk({ p5: 'Me', cys: 'free', glu: 'acid', water: 'h3o' }), A3, '5-methylcytosine (5mC)', MC, 260) },
             n4: { sub: 'Overall reaction', svg: SCHEME_NORM },
-            a1: { sub: 'Step 1 · Thiolate addition to C6 of 5-azacytosine', svg: panel(mk({ aza: true, p5: 'lp', cys: 'free', glu: 'acid', lpS: true }), mk({ ...I1, aza: true, p5: 'lp' }), A1, 'covalent intermediate') },
-            a2: { sub: 'Step 2 · S<sub>N</sub>2 methyl transfer to N5', svg: panel(mk({ ...I1, aza: true, p5: 'lp', sam: 'sam', lpN3: true }), mk({ ...I2, aza: true, p5: 'Melp', sam: 'sah' }), A2, 'N5-methyl adduct') },
+            a1: { sub: 'Step 1 · Thiolate addition to C6 of 5-azacytosine', svg: panel(mk({ aza: true, p5: 'lp', cys: 'free', glu: 'acid', lpS: true }), mk({ ...I1, aza: true, p5: 'lp' }), A1, 'covalent intermediate', null, 270) },
+            a2: { sub: 'Step 2 · S<sub>N</sub>2 methyl transfer to N5', svg: panel(mk({ ...I1, aza: true, p5: 'lp', sam: 'sam', lpN3: true }), mk({ ...I2, aza: true, p5: 'Melp', sam: 'sah' }), A2, 'N5-methyl adduct', null, 292) },
             a3: { sub: 'Dead end · the elimination step is impossible', svg: panel(mk({ ...I2, aza: true, p5: 'Melp', lpGlu: true, water: 'h2o', lpW: true }),
-                    mk({ aza: true, dbl: ['N3C4'], p5: 'Melp', c6: 'S', cys: 'bonded', glu: 'acid', water: 'h2o', trap: true }), AX, 'DNMT1 trapped on the DNA', '#ff4d4d') }
+                    mk({ aza: true, dbl: ['N3C4'], p5: 'Melp', c6: 'S', cys: 'bonded', glu: 'acid', water: 'h2o', trap: true }), AX, 'DNMT1 trapped on the DNA', '#ff4d4d', 270) }
         };
 
         // DNA colour key for the background panel (same polygons and colours as the 3D helix)
@@ -1603,10 +1634,26 @@ ${ringSVG(228, 46, right)}
             s += T([158, 70], 'purine (2 rings) + pyrimidine (1 ring) · dotted lines = H-bonds', GR, 8.5, 'middle', 600);
             return `<svg viewBox="0 0 316 76" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${s}</svg>`;
         }
-        return { panels, dnaKey };
+        // Azacitidine window: structure → incorporation into DNA → covalent trap
+        function azaFig() {
+            const A = mk({ aza: true, p5: 'lp', ribose: true });
+            const Bs = mk({ aza: true, p5: 'lp' });
+            const C = mk({ aza: true, dbl: ['N3C4'], p5: 'Melp', c6: 'S', cys: 'bonded', trap: true });
+            const har = (x0, x1, y, l1, l2, c2) => seg([x0, y], [x1 - 7, y], FG, 1.6) + `<polygon points="${x1},${y} ${x1 - 8},${y - 4.5} ${x1 - 8},${y + 4.5}" fill="${FG}"/>`
+                + T([(x0 + x1) / 2, y - 12], l1, NC, 9.5) + T([(x0 + x1) / 2, y + 13], l2, c2 || GR, 8.5, 'middle', 600);
+            const cap = (x, t, c, t2) => T([x, 200], t, c, 10.5) + (t2 ? T([x, 213], t2, '#f87171', 9, 'middle', 600) : '');
+            return `<svg viewBox="0 0 600 220" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">`
+                + draw(A, 86, 66) + har(132, 214, 66, 'phosphorylated,', 'built into DNA')
+                + draw(Bs, 268, 66) + har(316, 400, 66, 'DNMT1 + SAM', 'Cys → C6, CH₃ → N5')
+                + draw(C, 458, 66)
+                + cap(92, 'azacitidine', FG, 'N at position 5') + cap(264, '5-azacytosine in DNA', FG) + cap(476, 'DNMT1 covalently trapped', '#f87171', 'N5 has no H → no elimination')
+                + '</svg>';
+        }
+        return { panels, dnaKey, azaFig };
     })();
     document.getElementById('bg-dna-key').innerHTML = MECH.dnaKey();
     document.getElementById('bg-scheme').innerHTML = SCHEME_NORM;
+    document.getElementById('aza-fig').innerHTML = MECH.azaFig();
 
     const mechSvg = document.getElementById('mech-svg'), mechSub = document.getElementById('mech-sub');
     let mechCur = null;
@@ -1651,8 +1698,8 @@ ${ringSVG(228, 46, right)}
     function fitInhModal() {
         if (inhModal.style.display !== 'block') return;
         const bp = document.getElementById('bottom-panel').getBoundingClientRect();
-        for (const w of [27, 30, 33]) {
-            inhModal.style.width = `min(${w}rem, ${Math.round(window.innerWidth * 0.45)}px, calc(100vw - 80px))`;
+        for (const w of [44, 52, 60]) {
+            inhModal.style.width = `min(${w}rem, ${Math.round(window.innerWidth * 0.9)}px, calc(100vw - 80px))`;
             inhModal.style.maxHeight = (inhModal.getBoundingClientRect().right > bp.left ? Math.round(bp.top - 16 - 12) : window.innerHeight - 32) + 'px';
             for (let fs = 1.0; fs >= 0.74; fs -= 0.02) {
                 inhModal.style.setProperty('--fs', fs.toFixed(2) + 'rem');
@@ -1690,9 +1737,9 @@ ${ringSVG(228, 46, right)}
                                   : 'TARGET CYTOSINE<small>C6 → attacked by Cys1226 · C5 → receives CH₃ from SAM</small>';
     }
     function stepInhibitor(dt) {
-        if (!st.inhib && inh.phase === null && !inh.dismissed && st.p >= 1 && !st.playing) {
-            inh.wait += dt; if (inh.wait > 5 && inhModal.style.display !== 'block' && inhPill.style.display !== 'block') inhPill.style.display = 'block';
-        } else if (inh.phase === null) { inh.wait = 0; inhPill.style.display = 'none'; }
+        if (!inh.unlocked && !st.inhib && inh.phase === null && st.p >= 1 && !st.playing) { inh.wait += dt; if (inh.wait > 5) inh.unlocked = true; }
+        const pillOn = inh.unlocked && !st.inhib && inh.phase === null && inhModal.style.display !== 'block';
+        inhPill.style.display = pillOn ? 'block' : 'none';
         if (inh.phase === 'swap') {
             inh.t += dt;
             if (inh.t >= 2.3) { inh.phase = 'bind'; st.inhib = true; st.p = 0; progress.value = 0; setPlaying(true); goView('front', 3.8); }
@@ -1703,10 +1750,10 @@ ${ringSVG(228, 46, right)}
             inh.add = Math.min(1, inh.add + dt / 5.0); progress.value = Math.round(sliderOf());
             if (inh.add >= 1) { inh.phase = 'done'; inh.addPlaying = false; playBtn.textContent = '▶'; showInhBtn('BACK TO CYTOSINE'); inh.idle = 1e9; }
         }
-        if (inhPill.style.display === 'block') {
-            const dr = document.getElementById('info-drawer'), open = !dr.classList.contains('collapsed');
-            const r = (open ? document.getElementById('info') : dr.querySelector('.drawer-tab')).getBoundingClientRect();
-            inhPill.style.top = Math.min(r.bottom + 12, window.innerHeight - 140) + 'px';
+        if (inhPill.style.display === 'block') {                     // bottom left, just above the reaction slider
+            const bp = document.getElementById('bottom-panel').getBoundingClientRect();
+            inhPill.style.left = Math.max(16, bp.left) + 'px';
+            inhPill.style.bottom = (window.innerHeight - bp.top + 12) + 'px';
         }
         inh.idle = (inh.idle || 0) + dt;
         controls.autoRotate = inh.phase === 'done' && !camAnim && !pointerDown && inh.idle > 4; controls.autoRotateSpeed = 3.0;
@@ -1760,6 +1807,11 @@ ${ringSVG(228, 46, right)}
         b.addEventListener('click', () => { st[key] = !st[key]; b.classList.toggle('active', st[key]); });
     }
     toggle('tg-labels', 'labels');
+    document.getElementById('desc-toggle').addEventListener('click', () => {
+        const open = document.getElementById('desc-body').classList.toggle('open');
+        document.getElementById('desc-toggle').classList.toggle('open', open);
+        document.getElementById('desc-lbl').textContent = open ? 'Hide description' : 'Click for description of reaction sequence';
+    });
 
     const MAX_ENZ_OPACITY = 0.35;
 
