@@ -439,7 +439,7 @@
     const FRONT_DIR = V(-0.35, 0.34, 0.87).normalize();
     const OPEN_DIR = FRONT_DIR.clone();               // the open cleft above the active site faces the front view
     const VIEWS = {
-        front:    { target: V(0.3, -0.5, 0.9), dir: FRONT_DIR.clone(), dist: 16.5 },
+        front:    { target: V(0.29, -0.455, 0.968), dir: V(0.9279, 0.3552, -0.1138).normalize(), dist: 15.9 },   // active-site close-up (matched to the reference screenshot)
         side:     { target: V(0.1, -0.5, 0.9), dir: V(0.15, 0.1, 0.98).normalize(), dist: 19 },
         gap: (() => {      // side-on to both the helix and the flipped base: shows the base swung out of the gap in the double helix
             const near = CRY.dna.filter(p => p.length() < 22), dc = near.reduce((a, p) => a.add(p), V(0, 0, 0)).multiplyScalar(1 / near.length);
