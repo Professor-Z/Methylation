@@ -786,7 +786,7 @@
             mat.customProgramCacheKey = () => tag;
             return mat;
         };
-        const mat = cutaway(new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0 }), 'dna-cut');
+        const mat = cutaway(new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0, transparent: true, opacity: 1 }), 'dna-cut');
         const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 12), mat, n);
         const M = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
         for (let i = 0; i < n; i++) {
@@ -794,11 +794,12 @@
             c.set(PAL[k]); if (k >= 3 && k <= 6) c.multiplyScalar(ELF[el]); mesh.setColorAt(i, c);
         }
         let sfDone = -1;
-        const setSF = (f) => {                   // f = 1 space-filling, 0 ball-and-stick
+        const setSF = (f, vis = 1) => {          // f = 1 space-filling, 0 ball-and-stick; vis fades the whole strand out (zoomed in on the active site)
+            mesh.visible = vis > 0.01; mat.opacity = vis; mat.depthWrite = vis > 0.98;
+            bondMesh.visible = f < 0.99 && vis > 0.01; bondMat.opacity = (1 - f) * vis; bondMat.depthWrite = f < 0.02 && vis > 0.98;
             if (Math.abs(f - sfDone) < 1e-4) return; sfDone = f;
             for (let i = 0; i < n; i++) { const el = CRY.dnaEl[i], r = lerp(BSR[el], VDWR[el] * 0.9, f); M.compose(CRY.dna[i], q, V(r, r, r)); mesh.setMatrixAt(i, M); }
             mesh.instanceMatrix.needsUpdate = true;
-            bondMesh.visible = f < 0.99; bondMat.opacity = 1 - f; bondMat.depthWrite = f < 0.02;
         };
         mesh.frustumCulled = false; scene.add(mesh);
         // DNA bonds for ball-and-stick
@@ -1324,7 +1325,9 @@
         st.sfA = smooth(0, 1, st.sfT);
         bondFade = 1 - st.sfA;
         for (const a of allAtoms) a.mesh.scale.setScalar(lerp(a.r, SF_R[a.el], st.sfA));
-        dna.setSF(st.sfA);
+        // the DNA duplex fades out while the camera is focused on the active site (the flipped-out target nucleotide stays)
+        st.dnaVis = smooth(32, 55, camera.position.length());
+        dna.setSF(st.sfA, st.dnaVis);
         const p = st.p, tm = TM(), A = st.inhib ? inh.add : 0;
         const att = smooth(tm.att[0], tm.att[1], p), meth = smooth(tm.meth[0], tm.meth[1], p), elim = tm.elim ? smooth(tm.elim[0], tm.elim[1], p) : 0;
         const attK = smooth(0.1, 0.9, att) * (1 - smooth(0.1, 0.9, elim));
@@ -1387,7 +1390,7 @@
         if (A > 0) { bondN3H.look = trans(1, 0, sA); bondOH.look = trans(0, 1, sA); }
         bondC5H.vis = bondH5O.vis = st.inhib ? 0 : 1;
         bondH5O.vis *= 1 - smooth(0.4, 0.8, u);
-        dna.b5.vis = dna.b3.vis = subAlpha * Math.max(1 - st.surfA, smooth(45, 70, camera.position.length()));   // the neighbouring DNA is cut away up close
+        dna.b5.vis = dna.b3.vis = subAlpha * st.dnaVis * Math.max(1 - st.surfA, smooth(45, 70, camera.position.length()));   // the neighbouring DNA is cut away up close
         // in the trapped adduct the Cys–C6 bond turns red and glows
         const red = st.inhib ? smooth(0.55, 0.75, A) : 0, pls = 0.5 + 0.5 * Math.sin(st.t * 5);
         bondCS.solidMat.color.copy(GREYB).lerp(RED, red);
