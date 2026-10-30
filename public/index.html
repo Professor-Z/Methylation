@@ -159,11 +159,9 @@
         text-shadow: 0 0 6px rgba(250,204,21,0.95), 0 0 16px rgba(250,204,21,0.75), 0 0 32px rgba(250,204,21,0.5); }
     #reactive-label small { display: block; font-size: 12px; letter-spacing: 0.12em; margin-top: 4px; }
 
-    #res-wrap { position: fixed; left: 16px; bottom: 16px; z-index: 11; }
+    #res-wrap { position: fixed; left: 16px; bottom: 16px; z-index: 11; display: flex; flex-direction: column; align-items: stretch; gap: 0.45rem; }
     #res-wrap .btn { padding: 0.62rem 1rem; font-size: 0.8rem; letter-spacing: 0.08em; }
-    #surf-wrap { position: fixed; right: 16px; bottom: 16px; z-index: 11; }
-    #surf-wrap .btn { padding: 0.62rem 1rem; font-size: 0.8rem; letter-spacing: 0.08em; }
-    @media (max-width: 960px) { #res-wrap, #surf-wrap { bottom: 100px; } }
+    @media (max-width: 960px) { #res-wrap { bottom: 100px; } }
     #desc-toggle { display: flex; align-items: center; gap: 0.4rem; width: 100%; margin: 0.55rem 0 0; padding: 0.35rem 0.1rem; background: none; border: none;
         font: inherit; font-size: 0.78rem; font-weight: 700; color: #9ca3af; cursor: pointer; text-align: left; }
     #desc-toggle:hover { color: #e5e7eb; }
@@ -203,7 +201,7 @@
 <body>
 <div id="canvas-wrap"></div>
 <div id="labels"></div>
-<div id="reactive-label">TARGET CYTOSINE<small>C6 → attacked by Cys1226 · C5 → receives CH₃ from SAM</small></div>
+<div id="reactive-label">ENZYME ACTIVE SITE</div>
 
 <!-- ======================= REACTION MECHANISM ======================= -->
 <div id="info-drawer" class="drawer left collapsed">
@@ -235,12 +233,12 @@
 
     <h3>2 · Methylation is an S<sub>N</sub>2 reaction</h3>
     <p>Cells can attach a methyl group (CH₃) to carbon 5 of cytosine, making <b>5-methylcytosine (5mC)</b>. The methyl group comes from <b>S-adenosylmethionine (SAM)</b>, which has a CH₃ bonded to a positively charged sulfur. SAM is essentially nature's version of methyl iodide (CH₃I):</p>
+    <div class="fig" id="bg-sam"></div>
     <ul>
         <li><b>Substrate:</b> the methyl carbon, which is unhindered and so ideal for S<sub>N</sub>2.</li>
         <li><b>Leaving group:</b> a neutral sulfide, <b>S-adenosylhomocysteine (SAH)</b>. It is a good leaving group because the sulfur gets rid of its positive charge when it leaves.</li>
         <li><b>Nucleophile:</b> C5 of cytosine. This is the hard part, because C5 sits in an electron-poor aromatic ring and is a very weak nucleophile on its own.</li>
     </ul>
-    <div class="fig" id="bg-sam"></div>
     <div class="fig" id="bg-scheme"></div>
     <p><b>DNA methyltransferase 1 (DNMT1)</b> is the <b>enzyme</b> (a protein catalyst) that performs this reaction. To make C5 a better nucleophile, it first bonds a sulfur atom from its own amino acid side chain (cysteine 1226, or Cys1226) to the neighboring carbon, C6. That pushes electron density onto C5. C5 then attacks the CH₃ of SAM by backside attack: the C–S bond breaks as the new C–C bond forms, and the methyl's three H's flip like an umbrella (inversion). Finally, a base in the active site removes the extra H from C5, the enzyme lets go, and the aromatic ring is restored. The <b>REACTION MECHANISM</b> tab shows each step with curved arrows.</p>
 
@@ -269,8 +267,11 @@
     </details>
 </div>
 </div>
-<div id="res-wrap"><button class="btn tg interactive" id="tg-labels" title="Label the atoms, amino acids and SAM">RESIDUES</button></div>
-<div id="surf-wrap"><button class="btn tg active interactive" id="tg-surface" title="Show or hide the protein surface (the active-site residues stay)">PROTEIN SURFACE</button></div>
+<div id="res-wrap">
+    <button class="btn tg active interactive" id="tg-sf" title="Switch every atom between space-filling (van der Waals spheres) and ball-and-stick">SPACE FILLING</button>
+    <button class="btn tg active interactive" id="tg-surface" title="Show or hide the protein surface (the active-site residues stay)">PROTEIN SURFACE</button>
+    <button class="btn tg interactive" id="tg-labels" title="Label the atoms, amino acids and SAM">RESIDUES</button>
+</div>
 
 <!-- ======================= INHIBITION ======================= -->
 <button id="inh-pill" class="interactive">How can this reactivity be leveraged to treat cancer?<b>THE CASE OF AZACITIDINE</b></button>
@@ -361,7 +362,76 @@
         const pts = (b) => { const a = i16(b), out = []; for (let i = 0; i < a.length; i += 3) out.push(V(a[i] / 20, a[i + 1] / 20, a[i + 2] / 20)); return out; };
         const vv = (a) => V(a[0], a[1], a[2]);
         const ends = D.ends.map(vv);
-        return { prot: pts(D.protXYZ), protEl: u8(D.protEl), dna: pts(D.dnaXYZ), dnaEl: u8(D.dnaEl), dnaCat: u8(D.dnaCat),
+    // ---- DNA arms: grow each end by repeating its own 4-bp screw step, then bend both arms into gentle waves.
+    //      Bonds (for ball-and-stick) are found on the unbent coordinates, so bending never breaks or adds a bond.
+    function buildDNA(dna, el, cat, EXT, opt) {
+        const P = dna.map(p => p.slice()), E = el.slice(), C = cat.slice(), arms = [];
+        const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        const nrm = (a) => { const l = Math.hypot(a[0], a[1], a[2]); return [a[0] / l, a[1] / l, a[2] / l]; };
+        const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+        ['L', 'R'].forEach(k => {
+            const X = EXT[k], R = X.R, t = X.t, idx = [];
+            for (let i = X.lo; i <= X.hi; i++) idx.push(i);
+            let unit = []; for (let i = X.hi - 160; i <= X.hi; i++) unit.push(i);
+            for (let n = 0; n < opt.units; n++) {
+                const nu = [];
+                for (const i of unit) {
+                    const p = P[i];
+                    P.push([R[0] * p[0] + R[1] * p[1] + R[2] * p[2] + t[0], R[3] * p[0] + R[4] * p[1] + R[5] * p[2] + t[1], R[6] * p[0] + R[7] * p[1] + R[8] * p[2] + t[2]]);
+                    E.push(E[i]); C.push(C[i] === 7 ? 0 : C[i]); nu.push(P.length - 1); idx.push(P.length - 1);
+                }
+                unit = nu;
+            }
+            arms.push(idx);
+        });
+        const straight = P.map(p => p.slice());
+        // bonds from the straight geometry
+        const bonds = [], HB = 2.2, hash = new Map(), key = (x, y, z) => x + ',' + y + ',' + z;
+        straight.forEach((p, i) => { const kk = key(Math.floor(p[0] / HB), Math.floor(p[1] / HB), Math.floor(p[2] / HB)); if (!hash.has(kk)) hash.set(kk, []); hash.get(kk).push(i); });
+        straight.forEach((p, i) => {
+            const cx = Math.floor(p[0] / HB), cy = Math.floor(p[1] / HB), cz = Math.floor(p[2] / HB);
+            for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let c = -1; c <= 1; c++) {
+                const l = hash.get(key(cx + a, cy + b, cz + c)); if (!l) continue;
+                for (const j of l) { if (j <= i) continue;
+                    const q = straight[j], d2 = (q[0] - p[0]) ** 2 + (q[1] - p[1]) ** 2 + (q[2] - p[2]) ** 2;
+                    const cut = (E[i] === 4 || E[j] === 4) ? 1.9 : 1.75;
+                    if (d2 < cut * cut && d2 > 0.8) bonds.push(i, j); }
+            }
+        });
+        arms.forEach((idx, si) => {
+            const cen = (ids) => { const c = [0, 0, 0]; ids.forEach(i => { c[0] += P[i][0]; c[1] += P[i][1]; c[2] += P[i][2]; }); return c.map(v => v / ids.length); };
+            const p0 = cen(idx.slice(0, 362)), pf = cen(idx.slice(idx.length - 362));
+            const u = nrm([pf[0] - p0[0], pf[1] - p0[1], pf[2] - p0[2]]);
+            const n1 = nrm(cross(cross(u, opt.up), u)), n2 = cross(u, n1);
+            const sb = opt.start[si], step = 0.5, N = Math.ceil(opt.len / step), W = opt.waves[si];
+            const Cs = [[0, 0, 0]], Ts = [u];
+            for (let j = 1; j <= N; j++) {            // centre line: integrate a tangent that tilts back and forth (arc length is preserved)
+                const sg = j * step - sb; let g1 = 0, g2 = 0;
+                if (sg > 0) { const x = Math.min(1, sg / opt.ramp), r = x * x * (3 - 2 * x);
+                    g1 = r * W[0] * Math.sin(2 * Math.PI * sg / W[1] + W[2]); g2 = r * W[3] * Math.sin(2 * Math.PI * sg / W[4] + W[5]); }
+                const T = nrm([u[0] + n1[0] * g1 + n2[0] * g2, u[1] + n1[1] * g1 + n2[1] * g2, u[2] + n1[2] * g1 + n2[2] * g2]);
+                const c = Cs[j - 1]; Cs.push([c[0] + T[0] * step, c[1] + T[1] * step, c[2] + T[2] * step]); Ts.push(T);
+            }
+            for (const i of idx) {
+                const q = [P[i][0] - p0[0], P[i][1] - p0[1], P[i][2] - p0[2]], sg = dot(q, u);
+                if (sg <= sb) continue;
+                const j = Math.min(N, Math.round(sg / step)), T = Ts[j];
+                const off = [q[0] - u[0] * sg, q[1] - u[1] * sg, q[2] - u[2] * sg];
+                const ax = cross(u, T), sn = Math.hypot(ax[0], ax[1], ax[2]), cs = dot(u, T);
+                let r = off;
+                if (sn > 1e-6) { const a = ax.map(v => v / sn), kx = cross(a, off), kd = dot(a, off); r = [0, 1, 2].map(m => off[m] * cs + kx[m] * sn + a[m] * kd * (1 - cs)); }
+                const c = Cs[j], extra = sg - j * step;
+                P[i] = [p0[0] + c[0] + T[0] * extra + r[0], p0[1] + c[1] + T[1] * extra + r[1], p0[2] + c[2] + T[2] * extra + r[2]];
+            }
+        });
+        return { P, E, C, bonds };
+    }
+        // screw step of the last 4 bp (161 atoms) of each arm, fitted to the model (x' = R·x + t)
+        const EXT = {"L":{"R":[-0.74891,0.355476,-0.559259,0.662254,0.431459,-0.612587,0.023537,-0.829144,-0.558539],"t":[-16.7854,20.6402,58.9027],"lo":472,"hi":1519},"R":{"R":[-0.203844,0.978846,-0.017534,0.290288,0.043328,-0.955958,-0.934976,-0.199956,-0.292979],"t":[-40.0631,9.6418,-57.4296],"lo":1520,"hi":2567}};
+        const arm = buildDNA(pts(D.dnaXYZ).map(v => [v.x, v.y, v.z]), Array.from(u8(D.dnaEl)), Array.from(u8(D.dnaCat)), EXT,
+            { units: 28, up: [0, 1, 0], start: [15, 22], ramp: 25, len: 520,
+              waves: [[0.65, 140, 0, 0.35, 190, 1.2], [0.65, 140, 3.14, 0.35, 190, 0]] });   // [tilt, wavelength (Å), phase] × 2 planes
+        return { prot: pts(D.protXYZ), protEl: u8(D.protEl), dna: arm.P.map(p => V(p[0], p[1], p[2])), dnaEl: arm.E, dnaCat: arm.C, dnaBonds: arm.bonds,
                  sugar: Object.fromEntries(Object.entries(D.sugar).map(([k, v]) => [k, vv(v)])), p3: vv(D.p3), me: vv(D.me),
                  protCen: vv(D.protCen), ends, axis: ends[1].clone().sub(ends[0]).normalize() };
     })();
@@ -377,14 +447,15 @@
             const d = new THREE.Vector3().crossVectors(CRY.axis, flip).normalize(); if (d.dot(FRONT_DIR) < 0) d.negate();
             return { target: dc.clone().multiplyScalar(0.55), dir: d.addScaledVector(flip, 0.35).normalize(), dist: 58 };
         })(),
-        overview: { target: CRY.protCen.clone().multiplyScalar(0.55), dir: (() => { const d = new THREE.Vector3().crossVectors(CRY.axis, UP).normalize(); if (d.dot(FRONT_DIR) < 0) d.negate(); return d.addScaledVector(UP, 0.3).normalize(); })(),   // side-on to the DNA, slightly from above
-                    get dist() { return window.innerWidth < window.innerHeight ? 155 : 125; } }
+        // starting view, matched to the reference screenshot: from above and to the side, both DNA arms crossing the frame diagonally
+        overview: { target: V(-4.28, -1.93, -9.43), dir: V(0.8372, 0.5036, 0.2132).normalize(),
+                    get dist() { return window.innerWidth < window.innerHeight ? 225 : 181; } }
     };
     camera.position.copy(VIEWS.overview.target).addScaledVector(VIEWS.overview.dir, VIEWS.overview.dist);
     scene.add(camera);
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.09; controls.enablePan = false;
-    controls.rotateSpeed = 0.7; controls.minDistance = 6; controls.maxDistance = 200;
+    controls.rotateSpeed = 0.7; controls.minDistance = 6; controls.maxDistance = 240;
     controls.target.copy(VIEWS.overview.target);
 
     scene.fog = new THREE.Fog(0x1a202c, 80, 200);
@@ -404,6 +475,10 @@
     const sphereGeo = new THREE.SphereGeometry(1, 32, 24);
     const cylGeo = new THREE.CylinderGeometry(1, 1, 1, 14, 1, false);
     const YELLOW = new THREE.Color(0xfacc15);
+    // space-filling radii: 0.9 × van der Waals (the same factor the DNA uses)
+    const SF_R = { C: 1.53, N: 1.40, O: 1.37, S: 1.62, P: 1.62, H: 0.99, K: 1.55 };
+    const allAtoms = [];
+    let bondFade = 0;                           // 1 − space-filling fraction: bonds fade out as the atoms swell
 
     function makeAtom(el, opts = {}) {
         const mat = new THREE.MeshStandardMaterial({ color: ELEM[el].c, roughness: 0.32, metalness: 0.05, transparent: true, opacity: 1 });
@@ -411,7 +486,9 @@
         const r = ELEM[el].r * (opts.scale || 1);
         mesh.scale.setScalar(r);
         scene.add(mesh);
-        return { el, mesh, mat, r, base: null, res: null, alpha: 1 };
+        const a = { el, mesh, mat, r, base: null, res: null, alpha: 1 };
+        allAtoms.push(a);
+        return a;
     }
     function setAtomAlpha(a, alpha) {
         a.alpha = alpha;
@@ -452,7 +529,7 @@
         update() {
             const A = this.a.mesh.position.clone(), B = this.b.mesh.position.clone();
             if (this.offsetFn) { const o = this.offsetFn(); if (o) { A.add(o); B.add(o); } }
-            const o = this.order, vis = this.vis * Math.min(this.a.alpha, this.b.alpha, 1);
+            const o = this.order, vis = this.vis * Math.min(this.a.alpha, this.b.alpha, 1) * bondFade;
             let sA = clamp((o - 0.62) / 0.3, 0, 1) * vis;
             let dA = clamp(1 - Math.abs(o - 0.5) / 0.4, 0, 1) * vis;
             if (this.look) { sA = this.look.solid * vis; dA = this.look.dots * vis; }
@@ -467,13 +544,13 @@
                 if (!showD) continue;
                 if (this.dots) { m.position.copy(A2).addScaledVector(u, per * (i + 0.5)); m.scale.setScalar(this.dotR || this.r); continue; }
                 if (this.e2dash) {
-                    const ra = this.a.r + 0.06, rb = this.b.r + 0.06, A3 = A.clone().addScaledVector(u, ra), Ld = Math.max(0.05, L - ra - rb), dl = Ld / (2 * this.nd - 1);
+                    const ra = this.a.mesh.scale.x + 0.06, rb = this.b.mesh.scale.x + 0.06, A3 = A.clone().addScaledVector(u, ra), Ld = Math.max(0.05, L - ra - rb), dl = Ld / (2 * this.nd - 1);
                     placeCyl(m, A3.clone().addScaledVector(u, 2 * i * dl), A3.clone().addScaledVector(u, (2 * i + 1) * dl), this.r); continue;
                 }
                 const c0 = A2.clone().addScaledVector(u, per * (i + 0.22)), c1 = A2.clone().addScaledVector(u, per * (i + 0.78));
                 placeCyl(m, c0, c1, this.r);
             }
-            if (showD) { this.dashMat.opacity = this.e2dash ? 1 : dA; this.dashMat.depthWrite = false; }
+            if (showD) { this.dashMat.opacity = this.e2dash ? Math.min(1, dA) : dA; this.dashMat.depthWrite = false; }
             if (showD && this.zap) {
                 const T = performance.now() / 1000, W = new THREE.Color(0xf0fff4);
                 this.dash.forEach((m, i) => {
@@ -586,9 +663,14 @@
     }
     const hBond = (h, o) => { const b = new Bond(h, o, { r: 0.06, order: 0.5, color: 0x22e55e, dashes: 5, shrink: 0.3, onTop: true, zap: true }); saltBridges.push(b); return b; };
 
+    // Each residue keeps its contact (H-bond / attack geometry) fixed; the rest of the side chain is turned about that contact
+    // bond by ROT degrees, chosen so the stubs stay clear of the DNA, the target nucleotide and each other.
+    const ROT = { arg10: 90, arg12: 0, glu: 0, cys: 150, sam: 0 };
+    const spin = (v, axis, a) => v.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(axis.clone().normalize(), a * deg));
+
     // ---- Arg1310 / Arg1312: each guanidinium donates one H-bond to the cytosine O2
     function buildArg(d, wRef, res) {
-        const O = G0.O2, w = perpPart(wRef, d).normalize();
+        const O = G0.O2, w = spin(perpPart(wRef, d).normalize(), d, ROT[res]);
         const NH1p = O.clone().addScaledVector(d, 2.91);
         const NH1 = eAtom('N', NH1p, res);
         const Hb = eAtom('H', O.clone().addScaledVector(d, 1.9), res); eBond(NH1, Hb);
@@ -617,14 +699,14 @@
         const res = 'glu';
         const OE1p = RING0.N3.clone().addScaledVector(gluDir, 2.72);
         const OE1 = eAtom('O', OE1p, res);
-        const down = perpPart(UP.clone().negate(), gluDir).normalize();
+        const down = spin(perpPart(UP.clone().negate(), gluDir).normalize(), gluDir, ROT.glu);
         const toCD = gluDir.clone().multiplyScalar(0.342).addScaledVector(down, 0.94).normalize();   // side chain runs below the ring plane
         const CD = eAtom('C', OE1p.clone().addScaledVector(toCD, 1.32), res); eBond(OE1, CD);
         const b = toCD.clone().negate(), ip = perpPart(gluDir, b).normalize();
         const OE2 = eAtom('O', CD.base.clone().addScaledVector(trig(b, ip, -1), 1.25), res);
         const CG = eAtom('C', CD.base.clone().addScaledVector(trig(b, ip, 1), 1.52), res);
         eBond(CD, OE2); eBond(CD, OE2, { r: 0.07, offsetFn: dblOff(CD, OE2, OE1, 0.16) }); eBond(CD, CG);
-        chain(CG.base, CG, CG.base.clone().sub(CD.base).normalize(), UP.clone().negate(), 2, res);
+        chain(CG.base, CG, CG.base.clone().sub(CD.base).normalize(), down, 2, res);
         return { OE1, OE2, CD, Hbase: OE1p.clone().addScaledVector(gluDir, -0.98) };
     })();
 
@@ -633,7 +715,7 @@
         const res = 'cys';
         const S0 = RING0.C6.clone().addScaledVector(sDir, 3.3);
         const SG = eAtom('S', S0, res);
-        const perp = perpPart(V(-0.6, 0.5, -0.6), sDir).normalize();
+        const perp = spin(perpPart(V(-0.6, 0.5, -0.6), sDir).normalize(), sDir, ROT.cys);
         const cbDir = sDir.clone().multiplyScalar(0.17).addScaledVector(perp, 0.985).normalize();
         const CB = eAtom('C', S0.clone().addScaledVector(cbDir, 1.82), res); eBond(SG, CB);
         chain(CB.base, CB, cbDir, sDir, 3, res);
@@ -646,7 +728,7 @@
         const CM0 = RING0.C5.clone().addScaledVector(mSp3, 2.95);
         const SDp = CM0.clone().addScaledVector(mSp3, 1.81);
         const SD = eAtom('S', SDp, res);
-        const t = tet(mSp3.clone().negate(), rad(ANG.C5));
+        const t = tet(mSp3.clone().negate(), spin(perpPart(rad(ANG.C5), mSp3).normalize(), mSp3, ROT.sam));
         const CG = eAtom('C', SDp.clone().addScaledVector(t[0], 1.81), res); eBond(SD, CG);
         const C5a = eAtom('C', SDp.clone().addScaledVector(t[1], 1.81), res); eBond(SD, C5a);
         chain(CG.base, CG, t[0], t[2], 3, res);          // homocysteine arm
@@ -692,23 +774,43 @@
     const dna = (() => {
         const PAL = [0x8f98a3, 0xb86868, 0xc98b4a, 0x5b8a6c, 0x9a6262, 0xa39466, 0x62789e, 0xc58ac8];   // backbone C, O, P; base A, T, G, C; 5mC methyl
         const VDWR = [1.70, 1.55, 1.52, 1.80, 1.80], ELF = [1.0, 0.86, 1.1, 1.0, 1.0];               // C N O S P
+        const BSR = [0.36, 0.34, 0.34, 0.44, 0.42];                                                  // ball-and-stick radii (same as the active-site atoms)
         const n = CRY.dna.length, U = { uNear: { value: 0 }, uView: { value: V(0, 0, 1) } };
-        const mat = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0 });
-        mat.onBeforeCompile = (sh) => {          // near-camera cutaway: whole atoms are removed (never sliced), matching the protein's cutaway
-            Object.assign(sh.uniforms, U);
-            sh.vertexShader = 'uniform float uNear;\nuniform vec3 uView;\n' + sh.vertexShader.replace('#include <begin_vertex>',
-                '#include <begin_vertex>\n  { vec3 cW = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; float lat = length(cW - uView * dot(cW, uView));\n' +
-                '    if (uNear * smoothstep(-2.0, 2.0, dot(cW, uView)) * (1.0 - smoothstep(13.0, 19.0, lat)) > 0.5) transformed *= 0.0; }');
+        const cutaway = (mat, tag) => {          // near-camera cutaway: whole atoms/bonds are removed (never sliced), matching the protein's cutaway
+            mat.onBeforeCompile = (sh) => {
+                Object.assign(sh.uniforms, U);
+                sh.vertexShader = 'uniform float uNear;\nuniform vec3 uView;\n' + sh.vertexShader.replace('#include <begin_vertex>',
+                    '#include <begin_vertex>\n  { vec3 cW = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz; float lat = length(cW - uView * dot(cW, uView));\n' +
+                    '    if (uNear * smoothstep(-2.0, 2.0, dot(cW, uView)) * (1.0 - smoothstep(13.0, 19.0, lat)) > 0.5) transformed *= 0.0; }');
+            };
+            mat.customProgramCacheKey = () => tag;
+            return mat;
         };
-        mat.customProgramCacheKey = () => 'dna-cut';
+        const mat = cutaway(new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0 }), 'dna-cut');
         const mesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 12), mat, n);
         const M = new THREE.Matrix4(), q = new THREE.Quaternion(), c = new THREE.Color();
         for (let i = 0; i < n; i++) {
-            const el = CRY.dnaEl[i], k = CRY.dnaCat[i], r = VDWR[el] * 0.9;
-            M.compose(CRY.dna[i], q, V(r, r, r)); mesh.setMatrixAt(i, M);
+            const el = CRY.dnaEl[i], k = CRY.dnaCat[i];
             c.set(PAL[k]); if (k >= 3 && k <= 6) c.multiplyScalar(ELF[el]); mesh.setColorAt(i, c);
         }
+        let sfDone = -1;
+        const setSF = (f) => {                   // f = 1 space-filling, 0 ball-and-stick
+            if (Math.abs(f - sfDone) < 1e-4) return; sfDone = f;
+            for (let i = 0; i < n; i++) { const el = CRY.dnaEl[i], r = lerp(BSR[el], VDWR[el] * 0.9, f); M.compose(CRY.dna[i], q, V(r, r, r)); mesh.setMatrixAt(i, M); }
+            mesh.instanceMatrix.needsUpdate = true;
+            bondMesh.visible = f < 0.99; bondMat.opacity = 1 - f; bondMat.depthWrite = f < 0.02;
+        };
         mesh.frustumCulled = false; scene.add(mesh);
+        // DNA bonds for ball-and-stick
+        const nb = CRY.dnaBonds.length / 2;
+        const bondMat = cutaway(new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.45, metalness: 0.05, transparent: true, opacity: 0 }), 'dna-bond-cut');
+        const bondMesh = new THREE.InstancedMesh(cylGeo, bondMat, nb);
+        for (let k = 0; k < nb; k++) {
+            const A = CRY.dna[CRY.dnaBonds[2 * k]], B = CRY.dna[CRY.dnaBonds[2 * k + 1]], d = B.clone().sub(A), L = d.length();
+            M.compose(A.clone().addScaledVector(d, 0.5), new THREE.Quaternion().setFromUnitVectors(UP, d.multiplyScalar(1 / L)), V(0.1, L, 0.1));
+            bondMesh.setMatrixAt(k, M);
+        }
+        bondMesh.frustumCulled = false; scene.add(bondMesh);
         // the target nucleotide stays bonded into its strand: C5′–O5′ and O3′–P bonds to the crystal neighbours
         const anchor = (p) => { const o = new THREE.Object3D(); o.position.copy(p); return { mesh: o, alpha: 1, r: 1.5 }; };
         const b5 = new Bond(S.C5p, anchor(CRY.sugar["O5'"]), { r: 0.13, color: 0x9ca3af }), b3 = new Bond(S.O3p, anchor(CRY.p3), { r: 0.13, color: 0x9ca3af });
@@ -718,7 +820,7 @@
         const near = (p, d) => { const cx = Math.floor(p.x / HB), cy = Math.floor(p.y / HB), cz = Math.floor(p.z / HB), d2 = d * d;
             for (let a = -1; a <= 1; a++) for (let b = -1; b <= 1; b++) for (let e = -1; e <= 1; e++) { const l = hash.get(key(cx + a, cy + b, cz + e)); if (l) for (const q2 of l) if (q2.distanceToSquared(p) < d2) return true; }
             return false; };
-        return { me: CRY.me, b5, b3, mesh, U, near };
+        return { me: CRY.me, b5, b3, mesh, U, near, setSF };
     })();
 
     // =====================================================================
@@ -859,13 +961,33 @@
 
     // ---- nucleoplasm molecules diffusing around the enzyme: water, K⁺, phosphate, glucose, ATP (ball-and-stick)
     const bgMols = (() => {
+        const CTR = CRY.protCen.clone().multiplyScalar(0.55), RMAX = 100;
+        // the starting (overview) camera: molecules also fill everything it can see, out to where the fog takes over
+        const OV = VIEWS.overview, ovCam = OV.target.clone().addScaledVector(OV.dir, OV.dist), ovF = OV.dir.clone().negate();
+        const ovR = new THREE.Vector3().crossVectors(ovF, UP).normalize(), ovU = new THREE.Vector3().crossVectors(ovR, ovF);
+        const ovT = Math.tan(20 * deg) * 1.1, ovA = Math.max(2.3, window.innerWidth / window.innerHeight), relV = V(0, 0, 0);
+        const inRegion = (p) => {
+            if (p.distanceTo(CTR) <= RMAX) return true;
+            relV.copy(p).sub(ovCam); const z = relV.dot(ovF);
+            return z > 40 && z < 240 && Math.abs(relV.dot(ovU)) < z * ovT + 4 && Math.abs(relV.dot(ovR)) < z * ovT * ovA + 4;
+        };
+        // bounding box of the region, and its volume relative to the ball (molecule numbers scale with it, so the density stays the same)
+        const bLo = CTR.clone().addScaledVector(V(1, 1, 1), -RMAX), bHi = CTR.clone().addScaledVector(V(1, 1, 1), RMAX);
+        [40, 240].forEach(z => [-1, 1].forEach(a => [-1, 1].forEach(b => {
+            const c = ovCam.clone().addScaledVector(ovF, z).addScaledVector(ovU, a * (z * ovT + 4)).addScaledVector(ovR, b * (z * ovT * ovA + 4));
+            bLo.min(c); bHi.max(c); })));
+        let vsd = 97531; const vr = () => { vsd = (vsd * 16807) % 2147483647; return vsd / 2147483647; };
+        const randBox = (out) => out.set(lerp(bLo.x, bHi.x, vr()), lerp(bLo.y, bHi.y, vr()), lerp(bLo.z, bHi.z, vr()));
+        let hit = 0; const tp = V(0, 0, 0); for (let i = 0; i < 20000; i++) if (inRegion(randBox(tp))) hit++;
+        const boxV = (bHi.x - bLo.x) * (bHi.y - bLo.y) * (bHi.z - bLo.z), F = (hit / 20000) * boxV / (4 / 3 * Math.PI * RMAX ** 3);
+        const NM = (n) => Math.round(n * F);
         const T = [];
         const cen = (atoms) => { const c = V(0, 0, 0); atoms.forEach(a => c.add(a[1])); c.multiplyScalar(1 / atoms.length); atoms.forEach(a => a[1] = a[1].clone().sub(c)); return atoms; };
         { const tt = [V(1, 1, 1), V(1, -1, -1), V(-1, 1, -1), V(-1, -1, 1)].map(v => v.normalize().multiplyScalar(1.53));
           const a = [['P', V(0, 0, 0)], ...tt.map(v => ['O', v])]; a.push(['H', tt[0].clone().multiplyScalar(1.63)]);
-          T.push({ name: 'phosphate', atoms: a, bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5]], n: 16 }); }
-        T.push({ name: 'water', atoms: cen([['O', V(0, 0, 0)], ['H', V(0.757, 0.586, 0)], ['H', V(-0.757, 0.586, 0)]]), bonds: [[0, 1], [0, 2]], n: 130 });
-        T.push({ name: 'K+', atoms: [['K', V(0, 0, 0)]], bonds: [], n: 22 });
+          T.push({ name: 'phosphate', atoms: a, bonds: [[0, 1], [0, 2], [0, 3], [0, 4], [1, 5]], n: NM(50) }); }
+        T.push({ name: 'water', atoms: cen([['O', V(0, 0, 0)], ['H', V(0.757, 0.586, 0)], ['H', V(-0.757, 0.586, 0)]]), bonds: [[0, 1], [0, 2]], n: NM(900) });
+        T.push({ name: 'K+', atoms: [['K', V(0, 0, 0)]], bonds: [], n: NM(80) });
         const mk = () => { const atoms = [], bonds = []; return { atoms, bonds, add: (el, p, j) => { atoms.push([el, p]); if (j != null) bonds.push([j, atoms.length - 1]); return atoms.length - 1; } }; };
         { const m = mk(), ring = [];
           for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3; ring.push(V(1.45 * Math.cos(a), 1.45 * Math.sin(a), k % 2 ? 0.25 : -0.25)); }
@@ -882,7 +1004,7 @@
                    m.add('H', P6.clone().add(V(0, 0, -1.05)), c6); m.add('H', P6.clone().addScaledVector(V(-eq.y, eq.x, 0), 1.05), c6);
                    m.add('H', m.atoms[o6][1].clone().add(V(0.4, 0.5, 0.6).normalize().multiplyScalar(0.96)), o6); }
           }
-          T.push({ name: 'glucose', atoms: cen(m.atoms), bonds: m.bonds, n: 10 }); }
+          T.push({ name: 'glucose', atoms: cen(m.atoms), bonds: m.bonds, n: NM(35) }); }
         { const m = mk(), r6 = 1.39, ang = (d) => d * Math.PI / 180;
           const hx = (d) => V(r6 * Math.cos(ang(d)), r6 * Math.sin(ang(d)), 0);
           const N1 = m.add('N', hx(90)), C2 = m.add('C', hx(150), N1), N3 = m.add('N', hx(210), C2), C4 = m.add('C', hx(270), N3), C5 = m.add('C', hx(330), C4), C6 = m.add('C', hx(30), C5);
@@ -924,40 +1046,43 @@
                 }
             }
           });
-          T.push({ name: 'ATP', atoms: cen(m.atoms), bonds: m.bonds, n: 10 }); }
+          T.push({ name: 'ATP', atoms: cen(m.atoms), bonds: m.bonds, n: NM(30) }); }
         const RAD = { C: 0.36, O: 0.34, H: 0.22, P: 0.42, N: 0.34, K: 1.1 }, COL = { C: 0x6b7280, O: 0xef4444, H: 0xf1f5f9, P: 0xf59e0b, N: 0x3b82f6, K: 0x8b5cf6 };
         const count = {}; T.forEach(t => t.atoms.forEach(([e]) => count[e] = (count[e] || 0) + t.n));
         const nb = T.reduce((a, t) => a + t.bonds.length * t.n, 0);
         const meshes = {};
         for (const e in count) { meshes[e] = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 14, 10), new THREE.MeshStandardMaterial({ color: COL[e], roughness: 0.35 }), count[e]); meshes[e].frustumCulled = false; scene.add(meshes[e]); }
-        const bondMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 8), new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.45 }), nb);
+        const bondMat = new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.45, transparent: true, opacity: 0 });
+        const bondMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 8), bondMat, nb);
         bondMesh.frustumCulled = false; scene.add(bondMesh);
-        const CTR = CRY.protCen.clone().multiplyScalar(0.55), RMAX = 150;
-        const sightLines = [OPEN_DIR.clone(), VIEWS.front.dir.clone(), VIEWS.side.dir.clone(), VIEWS.gap.dir.clone()];
+        // the molecules fill a ball around the enzyme that is wider than the overview frame (the overview camera sits just outside it)
+        // "outside the DNA and protein" is looked up on a 1.5 Å grid that is filled in lazily (the exact test is too slow to run per molecule per frame)
+        const GH = 1.5, occ = new Map(), gp = V(0, 0, 0);
         const allowed = (p) => {
-            if (p.distanceTo(CTR) > RMAX || p.length() < 16) return false;
-            if (dna.near(p, 4.5)) return false;                               // not inside the DNA
-            for (const a of sightLines) { const pr = p.dot(a); if (pr > 0 && pr < 70 && p.clone().addScaledVector(a, -pr).length() < 12) return false; }
-            return protein.field(p) > 2.6;
+            if (p.length() < 16 || !inRegion(p)) return false;
+            const ix = Math.floor(p.x / GH), iy = Math.floor(p.y / GH), iz = Math.floor(p.z / GH), k = (ix + 512) + 1024 * ((iy + 512) + 1024 * (iz + 512));
+            let o = occ.get(k);
+            if (o === undefined) { gp.set((ix + 0.5) * GH, (iy + 0.5) * GH, (iz + 0.5) * GH);
+                o = !dna.near(gp, 4.5) && protein.field(gp) > 2.6; occ.set(k, o); }   // not inside the DNA, not inside the protein
+            return o;
         };
         let sd = 24680; const rr = () => { sd = (sd * 16807) % 2147483647; return sd / 2147483647; };
         const gauss = () => { let u = 0; while (!u) u = rr(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rr()); };
         const mols = [];
         T.forEach(t => { for (let i = 0; i < t.n; i++) {
             let p, tries = 0;
-            do {
-                if (rr() < 0.7) {
-                    const v = VIEWS.overview, dist = v.dist, cam = v.target.clone().addScaledVector(v.dir, dist);
-                    const f = v.dir.clone().negate(), r = new THREE.Vector3().crossVectors(f, V(0, 1, 0)).normalize(), up = new THREE.Vector3().crossVectors(r, f);
-                    const asp = window.innerWidth / window.innerHeight, tn = Math.tan(20 * deg), D = dist * (0.35 + 0.9 * rr());
-                    p = cam.clone().addScaledVector(f, D).addScaledVector(r, (2 * rr() - 1) * tn * asp * D).addScaledVector(up, (2 * rr() - 1) * tn * D);
-                } else p = CTR.clone().add(V(rr() - 0.5, rr() - 0.5, rr() - 0.5).multiplyScalar(140));
-            } while (!allowed(p) && ++tries < 400);
+            do p = V(lerp(bLo.x, bHi.x, rr()), lerp(bLo.y, bHi.y, rr()), lerp(bLo.z, bHi.z, rr()));   // uniform over the region
+            while (!allowed(p) && ++tries < 2000);
             mols.push({ t, p, v: V(gauss(), gauss(), gauss()).multiplyScalar(2), q: new THREE.Quaternion().setFromAxisAngle(V(rr() - 0.5, rr() - 0.5, rr() - 0.5).normalize(), 6.28 * rr()),
-                        w: V(rr() - 0.5, rr() - 0.5, rr() - 0.5).normalize(), ws: 0.6 + 1.2 * rr() });
+                        w: V(rr() - 0.5, rr() - 0.5, rr() - 0.5).normalize(), ws: 0.6 + 1.2 * rr(), h: 1, wp: t.atoms.map(() => V(0, 0, 0)) });
         } });
-        const M = new THREE.Matrix4(), q0b = new THREE.Quaternion(), a = V(0, 0, 0), b = V(0, 0, 0), dqm = new THREE.Quaternion(), prev = V(0, 0, 0);
-        function step(dt) {
+        const M = new THREE.Matrix4(), q0b = new THREE.Quaternion(), qb = new THREE.Quaternion(), dqm = new THREE.Quaternion(), prev = V(0, 0, 0);
+        const sc = V(1, 1, 1), mid = V(0, 0, 0), d = V(0, 0, 0), camP = V(0, 0, 0), los = V(0, 0, 0), rel = V(0, 0, 0);
+        function step(dt, sf) {
+            // up close, molecules drifting into the line of sight to the active site shrink away (and come back when they leave)
+            camP.copy(camera.position); los.copy(controls.target).sub(camP); const Lt = los.length(); los.multiplyScalar(1 / Lt);
+            const clear = 1 - smooth(45, 70, Lt), ease = Math.min(1, dt * 6);
+            const focus = smooth(32, 55, camera.position.length());          // 0 while the camera is focused on the active site: the cytosol is hidden
             for (const m of mols) {
                 const kick = m.t.name === 'water' ? 16 : m.t.name === 'K+' ? 12 : 9;
                 m.v.x += gauss() * kick * dt; m.v.y += gauss() * kick * dt; m.v.z += gauss() * kick * dt;
@@ -965,20 +1090,28 @@
                 prev.copy(m.p); m.p.addScaledVector(m.v, dt);
                 if (!allowed(m.p)) { m.p.copy(prev); m.v.multiplyScalar(-0.8); }
                 dqm.setFromAxisAngle(m.w, m.ws * dt); m.q.multiply(dqm);
+                rel.copy(m.p).sub(camP); const along = rel.dot(los), lat = Math.sqrt(Math.max(0, rel.lengthSq() - along * along));
+                let want = focus;
+                if (clear > 0 && along > -3 && along < Lt + 6 && lat < 7 + 0.12 * Math.max(0, along)) want = Math.min(want, 1 - clear);
+                if (rel.length() < 6) want = 0;
+                m.h = dt > 0 ? lerp(m.h, want, ease) : want;
             }
             const ix = {}; let ib = 0;
             for (const m of mols) {
-                const w = m.t.atoms.map(([e, l]) => l.clone().applyQuaternion(m.q).add(m.p));
-                m.t.atoms.forEach(([e], k) => { const r = RAD[e]; M.compose(w[k], q0b, V(r, r, r)); meshes[e].setMatrixAt(ix[e] = (ix[e] || 0), M); ix[e]++; });
+                const w = m.wp, hh = m.h < 0.02 ? 0 : m.h;
+                m.t.atoms.forEach(([e, l], k) => w[k].copy(l).applyQuaternion(m.q).add(m.p));
+                m.t.atoms.forEach(([e], k) => { const r = lerp(RAD[e], SF_R[e], sf) * hh; sc.set(r, r, r); M.compose(w[k], q0b, sc); meshes[e].setMatrixAt(ix[e] = (ix[e] || 0), M); ix[e]++; });
                 for (const [i0, i1] of m.t.bonds) {
-                    a.copy(w[i0]); b.copy(w[i1]); const d = b.clone().sub(a), L = d.length();
-                    M.compose(a.clone().addScaledVector(d, 0.5), new THREE.Quaternion().setFromUnitVectors(UP, d.multiplyScalar(1 / L)), V(0.1, L, 0.1)); bondMesh.setMatrixAt(ib++, M);
+                    d.copy(w[i1]).sub(w[i0]); const L = d.length();
+                    mid.copy(w[i0]).addScaledVector(d, 0.5); qb.setFromUnitVectors(UP, d.multiplyScalar(1 / L));
+                    sc.set(0.1 * hh, L * (hh > 0 ? 1 : 0), 0.1 * hh); M.compose(mid, qb, sc); bondMesh.setMatrixAt(ib++, M);
                 }
             }
             for (const e in meshes) meshes[e].instanceMatrix.needsUpdate = true;
             bondMesh.instanceMatrix.needsUpdate = true;
+            bondMesh.visible = sf < 0.99; bondMat.opacity = 1 - sf; bondMat.depthWrite = sf < 0.02;
         }
-        step(0);
+        step(0, 1);
         return { step, mols, allowed };
     })();
 
@@ -1095,7 +1228,8 @@
     const pv = new THREE.Vector3();
     function toScreen(p) { pv.copy(p).project(camera); return { x: (pv.x + 1) / 2 * window.innerWidth, y: (1 - pv.y) / 2 * window.innerHeight, z: pv.z }; }
 
-    const st = { surface: true, surfA: 1, inhib: false, p: 0, playing: false, labels: false, charges: true, arrows: true, orbitals: false, enz: 0.35, res: 1.0, resEff: 0, t: 0, arrowT: [0, 0, 0], C: {} };
+    const st = { surface: true, surfA: 1, inhib: false, p: 0, playing: false, labels: false, charges: true, arrows: true, orbitals: false, enz: 0.35, res: 1.0, resEff: 0, t: 0, arrowT: [0, 0, 0], C: {},
+                 sf: true, sfT: 1, sfA: 1, autoBS: false };   // sf: space-filling (true) or ball-and-stick; sfA fades between them
     const resLbl = () => st.labels && st.resEff > 0.15;
     const inh = { phase: null, t: 0, add: 0, wait: 0, dismissed: false, addPlaying: false };
 
@@ -1123,7 +1257,7 @@
             ? `<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><circle cx="14" cy="14" r="11.5" stroke-width="2.2"/>${glyph}</svg>`
             : (sign > 0 ? 'δ+' : 'δ−');
         const L = addLabel(html, (kind === 'formal' ? 'fc ' : 'pc ') + (sign > 0 ? 'pos' : 'neg'), posFn, () => alphaFn() > 0.02, 0, 0);
-        L.alphaFn = alphaFn; L.atomR = atom.r; L.chgW = kind === 'formal' ? 14 : 12; return L;
+        L.alphaFn = alphaFn; L.atomR = atom.r; L.atomObj = atom; L.chgW = kind === 'formal' ? 14 : 12; return L;
     }
     const side = (L) => { L.side = 26; return L; };
     const bindFade = () => smooth(0.26, 0.33, st.p);
@@ -1185,6 +1319,12 @@
 
     function update(dt) {
         st.t += dt;
+        // ---- space-filling ⇄ ball-and-stick: atoms swell to their van der Waals radii while every bond fades out
+        st.sfT = clamp(st.sfT + (st.sf ? 1 : -1) * dt / 1.3, 0, 1);
+        st.sfA = smooth(0, 1, st.sfT);
+        bondFade = 1 - st.sfA;
+        for (const a of allAtoms) a.mesh.scale.setScalar(lerp(a.r, SF_R[a.el], st.sfA));
+        dna.setSF(st.sfA);
         const p = st.p, tm = TM(), A = st.inhib ? inh.add : 0;
         const att = smooth(tm.att[0], tm.att[1], p), meth = smooth(tm.meth[0], tm.meth[1], p), elim = tm.elim ? smooth(tm.elim[0], tm.elim[1], p) : 0;
         const attK = smooth(0.1, 0.9, att) * (1 - smooth(0.1, 0.9, elim));
@@ -1270,16 +1410,11 @@
         const pulse = 0.5 + 0.5 * Math.sin(st.t * 5.0);
         const gA = smooth(0.25, 0.29, p) * (1 - smooth(0.37, 0.41, p));
         for (const k of SUB_KEYS) S[k].mat.emissive.setRGB(0, 0, 0);
-        [[S.C5, glowC5, haloC5], [S.C6, glowC6, haloC6]].forEach(([a, sp, halo]) => {
-            sp.position.copy(a.mesh.position); sp.material.opacity = gA * (0.75 + 0.25 * pulse); sp.scale.setScalar(1.0 + 0.3 * pulse);
-            halo.position.copy(a.mesh.position); halo.material.opacity = gA * (0.3 + 0.4 * pulse); halo.scale.setScalar(1.4 + 0.4 * pulse);
-            a.mat.emissive.copy(YELLOW).multiplyScalar((0.35 + 0.25 * pulse) * gA);
-        });
         const gG = (1 - smooth(0.25, 0.31, p)) * (inh.phase === 'swap' ? 0 : 1);
         const cen = V(0, 0, 0); for (const k of SUB_KEYS) cen.add(S[k].mesh.position); cen.multiplyScalar(1 / SUB_KEYS.length);
         subHalo.position.copy(cen); subHalo.material.opacity = gG * (0.3 + 0.2 * pulse); subHalo.scale.setScalar(10 + 1.5 * pulse);
         SUB_KEYS.forEach((k, i) => { const gl = atomGlows[i]; gl.position.copy(S[k].mesh.position);
-            gl.material.opacity = gG * (0.55 + 0.3 * pulse); gl.scale.setScalar((S[k].el === 'H' ? 1.2 : 1.7) * (1 + 0.15 * pulse)); });
+            gl.material.opacity = gG * (0.55 + 0.3 * pulse); gl.scale.setScalar((S[k].el === 'H' ? 1.2 : 1.7) * (S[k].mesh.scale.x / S[k].r) * (1 + 0.15 * pulse)); });
         st.subCen = cen;
 
         // ---- arrows: each step's set is drawn in sequence, as if by hand
@@ -1342,7 +1477,7 @@
             else if (L.atomR && camera.position.length() > 40) { L.el.style.display = 'none'; continue; }
             else if (L.atomR) {                                          // charges: just beyond the top-right of the sphere
                 const P0 = L.posFn(), sc = toScreen(P0); if (sc.z > 1) { L.el.style.display = 'none'; continue; }
-                const rpx = L.atomR * (window.innerHeight / 2) / (camera.position.distanceTo(P0) * Math.tan(camera.fov * deg / 2));
+                const rpx = L.atomObj.mesh.scale.x * (window.innerHeight / 2) / (camera.position.distanceTo(P0) * Math.tan(camera.fov * deg / 2));
                 x = sc.x + rpx * 0.72 + L.chgW; y = sc.y - rpx * 0.72 - L.chgW * 0.8;
             }
             else { const sc = toScreen(L.posFn()); if (sc.z > 1) { L.el.style.display = 'none'; continue; } x = sc.x + (L.side ? (sc.x < cx ? -L.side : L.side) : L.dx); y = sc.y + L.dy; }
@@ -1667,7 +1802,8 @@ ${ringSVG(228, 46, right)}
                  + T([-120, 30], 'from methionine', GR, 9, 'middle', 600) + T([P.Me[0], P.Me[1] - 17], 'reactive CH₃', MC, 9, 'middle', 600);
             const xs = Object.values(P).map(p => p[0]), ys = Object.values(P).map(p => p[1]);
             const x0 = Math.min(...xs) - 26, y0 = Math.min(...ys) - 30, w = Math.max(...xs) + 40 - x0, h = Math.max(...ys) + 52 - y0;
-            return `<svg viewBox="${f(x0)} ${f(y0)} ${f(w)} ${f(h)}" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${out}`
+            // drawn at the same scale as the reaction scheme below it (its 316-unit-wide ring bonds are 17 units; these are 24)
+            return `<svg viewBox="${f(x0)} ${f(y0)} ${f(w)} ${f(h)}" style="width:${(100 * w * 17 / 24 / 316).toFixed(1)}%;margin:0 auto" xmlns="http://www.w3.org/2000/svg" font-family="Inter, system-ui, sans-serif">${out}`
                  + T([x0 + w / 2, y0 + h - 8], 'S-adenosylmethionine (SAM)', SAMC, 11) + '</svg>';
         }
         return { panels, dnaKey, azaFig, samFig };
@@ -1755,8 +1891,7 @@ ${ringSVG(228, 46, right)}
         const pos = on ? [0, 25, 50, 75, 100] : [0, 34, 55, 77, 100];
         const txt = on ? ['Overview', 'Bound', 'Covalent', 'N5-methyl', 'Trapped'] : ['Overview', 'Bound', 'Covalent', 'Methylated', '5mC'];
         ['tk0', 'tk1', 'tk2', 'tk3', 'tk4'].forEach((id, k) => { const el = document.getElementById(id); el.style.left = pos[k] + '%'; el.textContent = txt[k]; });
-        reactiveEl.innerHTML = on ? '5-AZACYTOSINE<small>C6 → attacked by Cys1226 · N5 → receives CH₃ from SAM</small>'
-                                  : 'TARGET CYTOSINE<small>C6 → attacked by Cys1226 · C5 → receives CH₃ from SAM</small>';
+        reactiveEl.textContent = on ? 'AZACYTOSINE BINDING' : 'ENZYME ACTIVE SITE';
     }
     function stepInhibitor(dt) {
         if (!inh.unlocked && !st.inhib && inh.phase === null && st.p >= 1 && !st.playing) { inh.wait += dt; if (inh.wait > 5) inh.unlocked = true; }
@@ -1819,6 +1954,24 @@ ${ringSVG(228, 46, right)}
                    if (Math.abs(st.p - BOUND_P) < 0.004) { st.p = BOUND_P; inh.phase = 'ready'; showInhBtn('CONTINUE: LET DNMT1 REACT WITH 5-AZACYTOSINE'); } }
         } else st.p = v / 1000;
     });
+    // arrow keys slide the whole scene left / right / up / down (the camera and its pivot move together)
+    const panKeys = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, 1], ArrowDown: [0, -1] }, panHeld = new Set();
+    window.addEventListener('keydown', (ev) => {
+        if (panKeys[ev.key] && !(ev.target.tagName === 'INPUT' && ev.target.type === 'range')) { ev.preventDefault(); panHeld.add(ev.key); camAnim = null; }
+    });
+    window.addEventListener('keyup', (ev) => panHeld.delete(ev.key));
+    window.addEventListener('blur', () => panHeld.clear());
+    const panR = V(0, 0, 0), panU = V(0, 0, 0), panD = V(0, 0, 0);
+    function stepPan(dt) {
+        if (!panHeld.size) return;
+        let sx = 0, sy = 0; panHeld.forEach(k => { sx += panKeys[k][0]; sy += panKeys[k][1]; });
+        panD.copy(controls.target).sub(camera.position);
+        const dist = panD.length(); panD.normalize();
+        panR.crossVectors(panD, camera.up).normalize(); panU.crossVectors(panR, panD).normalize();
+        const v = dist * 0.55 * dt;                                       // speed scales with zoom: about half the view width per second
+        panD.set(0, 0, 0).addScaledVector(panR, -sx * v).addScaledVector(panU, -sy * v);   // the scene moves the way the arrow points
+        camera.position.add(panD); controls.target.add(panD);
+    }
     window.addEventListener('keydown', (ev) => {
         if (ev.code === 'Space' && ev.target.tagName !== 'INPUT') { ev.preventDefault(); playBtn.click(); }
     });
@@ -1829,6 +1982,9 @@ ${ringSVG(228, 46, right)}
         b.addEventListener('click', () => { st[key] = !st[key]; b.classList.toggle('active', st[key]); });
     }
     toggle('tg-labels', 'labels');
+    const sfBtn = document.getElementById('tg-sf');
+    function setSF(on) { st.sf = on; sfBtn.classList.toggle('active', on); sfBtn.textContent = on ? 'SPACE FILLING' : 'BALL & STICK'; }
+    sfBtn.addEventListener('click', () => { st.autoBS = false; setSF(!st.sf); });
     document.getElementById('tg-surface').addEventListener('click', (ev) => {
         st.surface = !st.surface; ev.currentTarget.classList.toggle('active', st.surface);
         if (!st.surface && camera.position.length() < 58) goView('gap', 1.6);     // pull back far enough to see the helix around the flipped base
@@ -1844,6 +2000,8 @@ ${ringSVG(228, 46, right)}
     let camAnim = null;
     function goView(name, dur = 1.4) {
         const v = VIEWS[name];
+        if (name === 'overview') { setSF(true); st.autoBS = false; }      // the overview is always shown space-filling …
+        if (name === 'front') st.autoBS = true;                            // … and switches to ball-and-stick once the camera reaches the active site
         const off = camera.position.clone().sub(controls.target);
         camAnim = { t: 0, dur, fromT: controls.target.clone(), toT: v.target.clone(), fromDir: off.clone().normalize(), fromDist: off.length(),
                     toDir: v.dir.clone().normalize(), toDist: v.dist };
@@ -1882,9 +2040,11 @@ ${ringSVG(228, 46, right)}
             if (st.p >= 1) setPlaying(false);
         }
         stepCamera(dt);
+        stepPan(dt);
+        if (st.autoBS && controls.target.length() < 3 && camera.position.distanceTo(controls.target) < 24) { st.autoBS = false; setSF(false); }
         stepInhibitor(dt);
         applyInfoMode();
-        bgMols.step(dt);
+        bgMols.step(dt, st.sfA);
         controls.update();
         update(dt);
         renderer.render(scene, camera);
@@ -1893,7 +2053,7 @@ ${ringSVG(228, 46, right)}
     requestAnimationFrame(frame);
 
     // test hook
-    window.__sim = { st, inh, update, S, HN3, H5, CM, HM, cys, glu, sam, wat, arg10, arg12, enzAtoms, protein, dna, bgMols, arrowSets, goView, camera, controls,
+    window.__sim = { CRY, resOffset, G0, subGeom, st, inh, update, S, HN3, H5, CM, HM, cys, glu, sam, wat, arg10, arg12, enzAtoms, protein, dna, bgMols, arrowSets, goView, camera, controls,
                      stepInhibitor, render: () => { controls.update(); update(0); renderer.render(scene, camera); } };
 })();
 </script>
